@@ -15,6 +15,7 @@ import type * as cronJobs from "../cronJobs.js";
 import type * as deliverables from "../deliverables.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
+import type * as leads from "../leads.js";
 import type * as seed from "../seed.js";
 import type * as tasks from "../tasks.js";
 
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   deliverables: typeof deliverables;
   events: typeof events;
   http: typeof http;
+  leads: typeof leads;
   seed: typeof seed;
   tasks: typeof tasks;
 }>;

@@ -23,7 +23,7 @@ const columns: TaskStatus[] = [
   "Done",
 ];
 
-type Tab = "dashboard" | "analytics" | "crons" | "errors" | "chat";
+type Tab = "dashboard" | "analytics" | "crons" | "errors" | "chat" | "leads";
 
 function scoreColor(score: number) {
   if (score >= 18) return "text-[color:var(--amber)]";
@@ -310,6 +310,7 @@ export default function Home() {
   const cronJobs = useQuery(api.cronJobs.list) ?? [];
   const analytics = useQuery(api.analytics.summary);
   const chatMessages = useQuery(api.chat.list, { limit: 50 }) ?? [];
+  const leads = useQuery(api.leads.listRecent, { limit: 100 }) ?? [];
 
   // Mutations
   const seedIfEmpty = useMutation(api.seed.seedIfEmpty);
@@ -360,6 +361,7 @@ export default function Home() {
     { key: "crons", label: "Cron Jobs", count: cronJobs.length },
     { key: "errors", label: "Errors", count: errorEvents.length },
     { key: "chat", label: "Squad Chat" },
+    { key: "leads", label: "Leads", count: leads.length },
   ];
 
   return (
@@ -1064,6 +1066,75 @@ export default function Home() {
               >
                 Send
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════ LEADS TAB ═════════════════════════════ */}
+      {tab === "leads" && (
+        <div className="panel overflow-hidden">
+          <div className="panelHeader flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm text-[color:var(--muted)]">
+                Captured from lead magnets
+              </div>
+              <div className="font-semibold">Leads ({leads.length})</div>
+            </div>
+            <div className="text-xs text-[color:var(--muted)]">
+              Source: mould-texture-gallery
+            </div>
+          </div>
+
+          <div className="panelBody">
+            {leads.length === 0 ? (
+              <div className="text-sm text-[color:var(--muted)]">
+                No leads captured yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-[color:var(--muted)]">
+                      <th className="py-2 pr-3">Email</th>
+                      <th className="py-2 pr-3">Name</th>
+                      <th className="py-2 pr-3">Intent</th>
+                      <th className="py-2 pr-3">Source</th>
+                      <th className="py-2 pr-3">Captured</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leads.map((l) => (
+                      <tr
+                        key={l._id}
+                        className="border-t border-[rgba(255,255,255,0.08)]"
+                      >
+                        <td className="py-2 pr-3 font-medium text-[color:rgba(245,246,250,0.92)]">
+                          {l.email}
+                        </td>
+                        <td className="py-2 pr-3 text-[color:rgba(245,246,250,0.82)]">
+                          {l.name ?? "—"}
+                        </td>
+                        <td className="py-2 pr-3">
+                          <span className="badge">{l.intent ?? "—"}</span>
+                        </td>
+                        <td className="py-2 pr-3 text-[color:var(--muted)]">
+                          {l.source ?? "—"}
+                        </td>
+                        <td className="py-2 pr-3 text-[color:var(--muted)]">
+                          {timeAgo(l.createdAt)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="mt-4 rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.14)] p-3 text-xs text-[color:var(--muted)]">
+              Tip: If you want true email marketing flows (double opt-in,
+              sequences), we can export/sync these to Brevo/Mailchimp later —
+              Convex remains the system-of-record.
             </div>
           </div>
         </div>

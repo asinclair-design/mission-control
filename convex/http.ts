@@ -100,6 +100,54 @@ http.route({
   }),
 });
 
+// POST /api/lead - Capture emails from lead magnets (used by Texture Gallery)
+http.route({
+  path: "/api/lead",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const secret = url.searchParams.get("secret");
+
+    // Simple shared secret to prevent random spam writes.
+    if (!process.env.LEADS_INGEST_SECRET || secret !== process.env.LEADS_INGEST_SECRET) {
+      return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const body = await request.json();
+    const email = String(body?.email ?? "").trim();
+    const name = body?.name ? String(body.name).trim() : undefined;
+    const source = body?.source ? String(body.source).trim() : "mould-texture-gallery";
+    const intent = body?.intent ? String(body.intent).trim() : "newsletter";
+    const ts = body?.ts ? String(body.ts).trim() : undefined;
+
+    if (!email || !email.includes("@")) {
+      return new Response(JSON.stringify({ ok: false, error: "invalid email" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(api.leads.ingest, {
+      email,
+      name,
+      source,
+      intent,
+      ts,
+    });
+
+    return new Response(JSON.stringify({ ok: true, result }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }),
+});
+
 // CORS preflight
 http.route({
   path: "/api/heartbeat",
@@ -133,6 +181,21 @@ http.route({
 
 http.route({
   path: "/api/chat",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }),
+});
+
+http.route({
+  path: "/api/lead",
   method: "OPTIONS",
   handler: httpAction(async () => {
     return new Response(null, {

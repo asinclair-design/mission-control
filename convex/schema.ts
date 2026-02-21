@@ -104,4 +104,15 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_cronId", ["cronId"]),
+
+  leads: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    source: v.optional(v.string()),
+    intent: v.optional(v.string()),
+    ts: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_createdAt", ["createdAt"]),
 });
