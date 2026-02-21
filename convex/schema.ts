@@ -87,6 +87,12 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_createdAt", ["createdAt"]),
 
+  chatMessages: defineTable({
+    agentName: v.string(),
+    message: v.string(),
+    createdAt: v.number(),
+  }),
+
   cronJobs: defineTable({
     cronId: v.string(), // openclaw cron id
     name: v.string(),

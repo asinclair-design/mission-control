@@ -55,3 +55,46 @@ export const upsertHeartbeat = mutation({
     return { created: false, id: existing._id };
   },
 });
+
+export const setStatus = mutation({
+  args: {
+    agentId: v.id("agents"),
+    status: v.union(
+      v.literal("active"),
+      v.literal("idle"),
+      v.literal("error"),
+      v.literal("paused")
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.agentId, { status: args.status });
+    return { ok: true };
+  },
+});
+
+export const remove = mutation({
+  args: { agentId: v.id("agents") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.agentId);
+    return { ok: true };
+  },
+});
+
+export const create = mutation({
+  args: {
+    name: v.string(),
+    role: v.string(),
+    capabilities: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const id = await ctx.db.insert("agents", {
+      name: args.name,
+      role: args.role,
+      status: "idle",
+      lastHeartbeatAt: Date.now(),
+      taskCount: 0,
+      capabilities: args.capabilities,
+    });
+    return { id };
+  },
+});

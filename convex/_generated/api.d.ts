@@ -9,6 +9,8 @@
  */
 
 import type * as agents from "../agents.js";
+import type * as analytics from "../analytics.js";
+import type * as chat from "../chat.js";
 import type * as cronJobs from "../cronJobs.js";
 import type * as deliverables from "../deliverables.js";
 import type * as events from "../events.js";
@@ -23,6 +25,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   agents: typeof agents;
+  analytics: typeof analytics;
+  chat: typeof chat;
   cronJobs: typeof cronJobs;
   deliverables: typeof deliverables;
   events: typeof events;
