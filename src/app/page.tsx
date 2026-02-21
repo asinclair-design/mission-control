@@ -1,8 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { agents, feed, priorityScore, tasks, type TaskStatus } from "@/lib/mock";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+
+type TaskStatus =
+  | "Inbox"
+  | "Assigned"
+  | "In Progress"
+  | "Review"
+  | "Waiting"
+  | "Done";
 
 const columns: TaskStatus[] = [
   "Inbox",
@@ -19,20 +28,50 @@ function scoreColor(score: number) {
   return "text-[color:rgba(245,246,250,0.7)]";
 }
 
+function priorityScore(t: {
+  impact: number;
+  confidence: number;
+  urgency: number;
+  effort: number;
+}) {
+  return (t.impact * t.confidence * t.urgency) / Math.max(1, t.effort);
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
   const [broadcast, setBroadcast] = useState("");
 
+  // Queries (realtime)
+  const agents = useQuery(api.agents.list) ?? [];
+  const tasks = useQuery(api.tasks.list) ?? [];
+  const feed = useQuery(api.events.listRecent, { limit: 40 }) ?? [];
+
+  // Mutations
+  const seedIfEmpty = useMutation(api.seed.seedIfEmpty);
+  const updateStatus = useMutation(api.tasks.updateStatus);
+  const createTask = useMutation(api.tasks.create);
+  const appendEvent = useMutation(api.events.append);
+  const addDeliverable = useMutation(api.deliverables.create);
+
+  // Ensure the app isn't blank on a new DB.
+  // This is safe: the mutation no-ops if agents exist.
+  useEffect(() => {
+    void seedIfEmpty({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const filteredTasks = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return tasks;
-    return tasks.filter(
-      (t) =>
+    return tasks.filter((t) => {
+      const tags = (t.tags ?? []).join(" ").toLowerCase();
+      return (
         t.title.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q) ||
-        t.tags.join(" ").toLowerCase().includes(q)
-    );
-  }, [query]);
+        tags.includes(q)
+      );
+    });
+  }, [query, tasks]);
 
   return (
     <main className="min-h-screen px-6 py-6">
@@ -41,11 +80,9 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 mb-2">
             <span className="badge">OpenClaw</span>
             <span className="badge">Multi-agent orchestration</span>
-            <span className="badge">MVP UI</span>
+            <span className="badge">Convex persistence</span>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Mission Control
-          </h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Mission Control</h1>
           <p className="mt-2 text-[color:var(--muted)] leading-6">
             Centralized command, monitoring, delegation, and deliverable gating
             for multiple autonomous agents.
@@ -77,14 +114,29 @@ export default function Home() {
               <div className="text-sm text-[color:var(--muted)]">Registry</div>
               <div className="font-semibold">Agents</div>
             </div>
-            <button className="button !py-2 !px-3" type="button">
-              Spawn
+            <button
+              className="button !py-2 !px-3"
+              type="button"
+              onClick={async () => {
+                const title = prompt("Task title (creates an Inbox task)");
+                if (!title) return;
+                const { id } = await createTask({ title, tags: ["manual"] });
+                await appendEvent({
+                  type: "task",
+                  title: "Task created",
+                  detail: `Created ${title}`,
+                  priority: "low",
+                  taskId: id,
+                });
+              }}
+            >
+              + Task
             </button>
           </div>
           <div className="panelBody space-y-3">
             {agents.map((a) => (
               <div
-                key={a.id}
+                key={a._id}
                 className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.18)] p-3"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -100,8 +152,8 @@ export default function Home() {
                       (a.status === "active"
                         ? "!text-[color:var(--ok)]"
                         : a.status === "error"
-                        ? "!text-[color:var(--danger)]"
-                        : "")
+                          ? "!text-[color:var(--danger)]"
+                          : "")
                     }
                   >
                     {a.status}
@@ -109,7 +161,9 @@ export default function Home() {
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="badge">hb {a.lastHeartbeatMin}m</span>
+                  <span className="badge">
+                    hb {Math.max(0, Math.round((Date.now() - a.lastHeartbeatAt) / 60000))}m
+                  </span>
                   <span className="badge">tasks {a.taskCount}</span>
                   {a.currentTask ? (
                     <span className="badge">now: {a.currentTask}</span>
@@ -117,13 +171,13 @@ export default function Home() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button className="button !py-2 !px-3" type="button">
+                  <button className="button !py-2 !px-3" type="button" disabled>
                     Pause
                   </button>
-                  <button className="button !py-2 !px-3" type="button">
+                  <button className="button !py-2 !px-3" type="button" disabled>
                     Restart
                   </button>
-                  <button className="button !py-2 !px-3" type="button">
+                  <button className="button !py-2 !px-3" type="button" disabled>
                     Edit
                   </button>
                 </div>
@@ -168,16 +222,15 @@ export default function Home() {
                       .sort((a, b) => priorityScore(b) - priorityScore(a))
                       .map((t) => {
                         const score = priorityScore(t);
-                        const hasDeliverable = t.deliverables.length > 0;
                         return (
                           <div
-                            key={t.id}
+                            key={t._id}
                             className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(255,255,255,0.03)] p-3"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <div className="text-xs text-[color:rgba(245,246,250,0.55)]">
-                                  {t.id}
+                                  {t.externalId ?? t._id}
                                 </div>
                                 <div className="font-semibold leading-5">
                                   {t.title}
@@ -193,40 +246,52 @@ export default function Home() {
                             </div>
 
                             <div className="mt-2 flex flex-wrap gap-2">
-                              {t.tags.map((tag) => (
+                              {(t.tags ?? []).map((tag) => (
                                 <span key={tag} className="badge">
                                   {tag}
                                 </span>
                               ))}
-                              <span
-                                className={
-                                  "badge " +
-                                  (hasDeliverable
-                                    ? "!text-[color:var(--ok)]"
-                                    : "!text-[color:rgba(245,246,250,0.55)]")
-                                }
-                              >
-                                deliverable {hasDeliverable ? "✓" : "—"}
-                              </span>
                             </div>
 
                             <div className="mt-3 flex flex-wrap gap-2">
                               <button
                                 className="button !py-2 !px-3"
                                 type="button"
-                                title="In real system: open task detail drawer"
+                                onClick={async () => {
+                                  await addDeliverable({
+                                    taskId: t._id,
+                                    kind: "Markdown",
+                                    title: "MVP deliverable (placeholder)",
+                                  });
+                                  await appendEvent({
+                                    type: "deliverable",
+                                    title: "Deliverable added",
+                                    detail: `Added placeholder deliverable to ${t.title}`,
+                                    priority: "low",
+                                    taskId: t._id,
+                                  });
+                                  alert("Deliverable added (placeholder). Now you can mark Done.");
+                                }}
                               >
-                                Open
+                                Add deliverable
                               </button>
                               <button
                                 className="button !py-2 !px-3"
                                 type="button"
-                                disabled={t.status === "Done" && !hasDeliverable}
-                                title={
-                                  t.status === "Done" && !hasDeliverable
-                                    ? "Cannot complete without deliverable"
-                                    : ""
-                                }
+                                onClick={async () => {
+                                  try {
+                                    await updateStatus({ taskId: t._id, status: "Done" });
+                                    await appendEvent({
+                                      type: "task",
+                                      title: "Task updated",
+                                      detail: `Marked Done: ${t.title}`,
+                                      priority: "med",
+                                      taskId: t._id,
+                                    });
+                                  } catch (err: any) {
+                                    alert(err?.message ?? String(err));
+                                  }
+                                }}
                               >
                                 Mark done
                               </button>
@@ -255,7 +320,7 @@ export default function Home() {
           <div className="panelBody space-y-3">
             {feed.map((e) => (
               <div
-                key={e.id}
+                key={e._id}
                 className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.16)] p-3"
               >
                 <div className="flex items-center justify-between">
@@ -266,8 +331,8 @@ export default function Home() {
                       (e.priority === "high"
                         ? "!text-[color:var(--danger)]"
                         : e.priority === "med"
-                        ? "!text-[color:var(--amber)]"
-                        : "")
+                          ? "!text-[color:var(--amber)]"
+                          : "")
                     }
                   >
                     {e.type}
@@ -277,8 +342,10 @@ export default function Home() {
                   {e.detail}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {e.agent ? <span className="badge">{e.agent}</span> : null}
-                  <span className="badge">{e.tsMin}m</span>
+                  {e.agentId ? <span className="badge">agent</span> : null}
+                  <span className="badge">
+                    {Math.max(0, Math.round((Date.now() - e.createdAt) / 60000))}m
+                  </span>
                 </div>
               </div>
             ))}
@@ -310,19 +377,26 @@ export default function Home() {
                 <button
                   className="button justify-center"
                   type="button"
-                  onClick={() => {
-                    // MVP stub
-                    alert("Broadcast queued (MVP stub). In production this would publish to the task bus.");
+                  onClick={async () => {
+                    const msg = broadcast.trim();
+                    if (!msg) return;
+                    await appendEvent({
+                      type: "message",
+                      title: "Broadcast",
+                      detail: msg,
+                      priority: "med",
+                    });
                     setBroadcast("");
+                    alert("Broadcast recorded (MVP). Next step: publish to OpenClaw task bus.");
                   }}
                   disabled={!broadcast.trim()}
                 >
                   Send broadcast
                 </button>
-                <button className="button justify-center" type="button">
+                <button className="button justify-center" type="button" disabled>
                   Schedule
                 </button>
-                <button className="button justify-center" type="button">
+                <button className="button justify-center" type="button" disabled>
                   Attach files
                 </button>
               </div>
@@ -332,7 +406,7 @@ export default function Home() {
       </div>
 
       <footer className="mt-8 text-sm text-[color:var(--muted)]">
-        MVP is mock-data only. Next step: wire to Redis/NATS + Postgres + WS.
+        Backed by Convex. Next step: wire OpenClaw → Mission Control via signed HTTP actions.
       </footer>
     </main>
   );
