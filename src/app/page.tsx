@@ -48,11 +48,260 @@ function timeAgo(ms: number) {
   return Math.round(diff / 86400_000) + "d";
 }
 
+function TaskDrawer({
+  task,
+  agents,
+  deliverables,
+  onClose,
+  onAddDeliverable,
+  onUpdateStatus,
+}: {
+  task: any;
+  agents: any[];
+  deliverables: any[];
+  onClose: () => void;
+  onAddDeliverable: () => Promise<void>;
+  onUpdateStatus: (status: TaskStatus) => Promise<void>;
+}) {
+  const score = priorityScore(task);
+  const assigned = (task.assignedAgentIds ?? [])
+    .map((id: string) => agents.find((a) => a._id === id))
+    .filter(Boolean);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex justify-end"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative w-full max-w-lg h-full overflow-y-auto panel !rounded-none !rounded-l-2xl border-l border-[rgba(255,255,255,0.12)]">
+        <div className="panelHeader flex items-center justify-between sticky top-0 z-10 bg-[rgba(10,14,20,0.95)] backdrop-blur-md">
+          <div>
+            <div className="text-xs text-[color:var(--muted)]">
+              {task.externalId ?? task._id}
+            </div>
+            <div className="font-semibold text-lg">{task.title}</div>
+          </div>
+          <button
+            onClick={onClose}
+            className="button !py-2 !px-3"
+            type="button"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-4 space-y-5">
+          {/* Status + Score */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span
+              className={
+                "badge " +
+                (task.status === "Done"
+                  ? "!text-[color:var(--ok)] !border-[rgba(41,214,125,0.35)]"
+                  : task.status === "In Progress"
+                    ? "!text-[color:var(--cyan)] !border-[rgba(51,230,255,0.35)]"
+                    : task.status === "Review"
+                      ? "!text-[color:var(--amber)] !border-[rgba(255,176,32,0.35)]"
+                      : "")
+              }
+            >
+              {task.status}
+            </span>
+            <span className={"badge font-semibold " + scoreColor(score)}>
+              Score: {score.toFixed(1)}
+            </span>
+          </div>
+
+          {/* Description */}
+          <div>
+            <div className="text-xs text-[color:var(--muted)] mb-1 uppercase tracking-wide">
+              Description
+            </div>
+            <div className="text-sm leading-6 text-[color:rgba(245,246,250,0.85)] whitespace-pre-wrap">
+              {task.description || "No description."}
+            </div>
+          </div>
+
+          {/* Priority breakdown */}
+          <div>
+            <div className="text-xs text-[color:var(--muted)] mb-2 uppercase tracking-wide">
+              Priority Breakdown
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: "Impact", value: task.impact },
+                { label: "Confidence", value: task.confidence },
+                { label: "Urgency", value: task.urgency },
+                { label: "Effort", value: task.effort },
+              ].map((m) => (
+                <div
+                  key={m.label}
+                  className="rounded-xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.18)] p-2 text-center"
+                >
+                  <div className="text-lg font-semibold">{m.value}</div>
+                  <div className="text-[10px] text-[color:var(--muted)]">
+                    {m.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tags */}
+          {(task.tags ?? []).length > 0 && (
+            <div>
+              <div className="text-xs text-[color:var(--muted)] mb-1 uppercase tracking-wide">
+                Tags
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(task.tags ?? []).map((tag: string) => (
+                  <span key={tag} className="badge">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Assigned Agents */}
+          <div>
+            <div className="text-xs text-[color:var(--muted)] mb-1 uppercase tracking-wide">
+              Assigned Agents
+            </div>
+            {assigned.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {assigned.map((a: any) => (
+                  <span
+                    key={a._id}
+                    className={
+                      "badge " +
+                      (a.status === "active"
+                        ? "!text-[color:var(--ok)]"
+                        : a.status === "error"
+                          ? "!text-[color:var(--danger)]"
+                          : "")
+                    }
+                  >
+                    {a.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-[color:var(--muted)]">
+                No agents assigned
+              </div>
+            )}
+          </div>
+
+          {/* Deliverables */}
+          <div>
+            <div className="text-xs text-[color:var(--muted)] mb-1 uppercase tracking-wide">
+              Deliverables ({deliverables.length})
+            </div>
+            {deliverables.length === 0 ? (
+              <div className="text-sm text-[color:var(--muted)]">
+                No deliverables yet. Task cannot be marked Done without one.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {deliverables.map((d: any) => (
+                  <div
+                    key={d._id}
+                    className="rounded-xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.14)] p-2 flex items-center justify-between"
+                  >
+                    <div>
+                      <span className="badge !text-[color:var(--ok)]">
+                        {d.kind}
+                      </span>
+                      <span className="ml-2 text-sm">{d.title}</span>
+                    </div>
+                    {d.href && (
+                      <a
+                        href={d.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="link text-sm"
+                      >
+                        Open ↗
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Timestamps */}
+          <div>
+            <div className="text-xs text-[color:var(--muted)] mb-1 uppercase tracking-wide">
+              Timestamps
+            </div>
+            <div className="text-sm text-[color:var(--muted)] space-y-1">
+              <div>Created: {new Date(task.createdAt).toLocaleString()}</div>
+              <div>Updated: {new Date(task.updatedAt).toLocaleString()}</div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="border-t border-[rgba(255,255,255,0.08)] pt-4">
+            <div className="text-xs text-[color:var(--muted)] mb-2 uppercase tracking-wide">
+              Actions
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="button"
+                type="button"
+                onClick={onAddDeliverable}
+              >
+                Add Deliverable
+              </button>
+              {task.status !== "Done" && (
+                <>
+                  {(["Inbox", "Assigned", "In Progress", "Review", "Waiting", "Done"] as TaskStatus[])
+                    .filter((s) => s !== task.status)
+                    .map((s) => (
+                      <button
+                        key={s}
+                        className="button"
+                        type="button"
+                        onClick={() => onUpdateStatus(s)}
+                      >
+                        → {s}
+                      </button>
+                    ))}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* External link */}
+          {task.externalId && (
+            <div className="border-t border-[rgba(255,255,255,0.08)] pt-4">
+              <a
+                href={`https://app.clickup.com/t/${task.externalId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="link text-sm"
+              >
+                Open in ClickUp ↗
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [query, setQuery] = useState("");
   const [broadcast, setBroadcast] = useState("");
   const [chatMsg, setChatMsg] = useState("");
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Queries
   const agents = useQuery(api.agents.list) ?? [];
@@ -77,6 +326,15 @@ export default function Home() {
     void seedIfEmpty({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const selectedTask = useMemo(
+    () => tasks.find((t) => t._id === selectedTaskId),
+    [tasks, selectedTaskId]
+  );
+  const selectedDeliverables = useQuery(
+    api.deliverables.listByTask,
+    selectedTaskId ? { taskId: selectedTaskId as Id<"tasks"> } : "skip"
+  ) ?? [];
 
   const filteredTasks = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -351,7 +609,8 @@ export default function Home() {
                           return (
                             <div
                               key={t._id}
-                              className="rounded-xl border border-[rgba(255,255,255,0.10)] bg-[rgba(255,255,255,0.03)] p-2"
+                              className="rounded-xl border border-[rgba(255,255,255,0.10)] bg-[rgba(255,255,255,0.03)] p-2 cursor-pointer hover:border-[rgba(255,176,32,0.3)] transition-colors"
+                              onClick={() => setSelectedTaskId(t._id)}
                             >
                               <div className="flex items-start justify-between gap-1">
                                 <div className="min-w-0">
@@ -387,7 +646,7 @@ export default function Home() {
                                 <button
                                   className="button !py-1 !px-2 !text-[10px]"
                                   type="button"
-                                  onClick={async () => {
+                                  onClick={async (e) => { e.stopPropagation();
                                     await addDeliverable({
                                       taskId: t._id,
                                       kind: "Markdown",
@@ -408,7 +667,7 @@ export default function Home() {
                                   <button
                                     className="button !py-1 !px-2 !text-[10px]"
                                     type="button"
-                                    onClick={async () => {
+                                    onClick={async (e) => { e.stopPropagation();
                                       try {
                                         await updateStatus({
                                           taskId: t._id,
@@ -813,6 +1072,48 @@ export default function Home() {
       <footer className="mt-8 text-sm text-[color:var(--muted)]">
         Backed by Convex (realtime + vector-ready). Dashboard v2.0.
       </footer>
+
+      {/* Task Detail Drawer */}
+      {selectedTask && (
+        <TaskDrawer
+          task={selectedTask}
+          agents={agents}
+          deliverables={selectedDeliverables}
+          onClose={() => setSelectedTaskId(null)}
+          onAddDeliverable={async () => {
+            const title = prompt("Deliverable title:") || "Deliverable";
+            await addDeliverable({
+              taskId: selectedTask._id as Id<"tasks">,
+              kind: "Markdown",
+              title,
+            });
+            await appendEvent({
+              type: "deliverable",
+              title: "Deliverable added",
+              detail: `${title} → ${selectedTask.title}`,
+              priority: "low",
+              taskId: selectedTask._id as Id<"tasks">,
+            });
+          }}
+          onUpdateStatus={async (status: TaskStatus) => {
+            try {
+              await updateStatus({
+                taskId: selectedTask._id as Id<"tasks">,
+                status,
+              });
+              await appendEvent({
+                type: "task",
+                title: `Task → ${status}`,
+                detail: selectedTask.title,
+                priority: "med",
+                taskId: selectedTask._id as Id<"tasks">,
+              });
+            } catch (err: unknown) {
+              alert(err instanceof Error ? err.message : String(err));
+            }
+          }}
+        />
+      )}
     </main>
   );
 }
