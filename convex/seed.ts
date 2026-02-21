@@ -1,8 +1,8 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-// Seed initial demo data once, so the deployed app has something to show.
-// Safe to call multiple times; it will no-op if agents already exist.
+// Seed RP Group agents based on Matt's actual business needs.
+// Safe to call multiple times; no-ops if agents already exist.
 
 export const seedIfEmpty = mutation({
   args: {
@@ -13,161 +13,153 @@ export const seedIfEmpty = mutation({
     const existing = await ctx.db.query("agents").first();
     if (existing) return { seeded: false };
 
-    const orchestratorId = await ctx.db.insert("agents", {
-      name: "Orchestrator",
-      role: "Jarvis-type coordinator",
+    // Real agents based on RP Group business context
+    const opsId = await ctx.db.insert("agents", {
+      name: "Ops",
+      role: "Operations & task management",
       status: "active",
-      lastHeartbeatAt: now - 60_000,
-      taskCount: 7,
-      currentTask: "triaging mission queue",
-      capabilities: ["broadcast", "assign", "aggregate"],
+      lastHeartbeatAt: now - 2 * 60_000,
+      taskCount: 12,
+      currentTask: "syncing ClickUp tasks",
+      capabilities: ["clickup", "email_triage", "calendar", "task_routing"],
     });
 
-    const scoutId = await ctx.db.insert("agents", {
-      name: "Scout",
-      role: "Research & synthesis",
+    const salesId = await ctx.db.insert("agents", {
+      name: "Sales Scout",
+      role: "BD, lead gen & outreach",
       status: "active",
-      lastHeartbeatAt: now - 3 * 60_000,
-      taskCount: 4,
-      currentTask: "finding podcast targets",
-      capabilities: ["web_research", "summaries"],
+      lastHeartbeatAt: now - 5 * 60_000,
+      taskCount: 8,
+      currentTask: "Reddit lead monitoring",
+      capabilities: ["web_research", "reddit", "linkedin", "lead_scoring"],
+    });
+
+    const marketerId = await ctx.db.insert("agents", {
+      name: "Content Engine",
+      role: "Marketing & content creation",
+      status: "active",
+      lastHeartbeatAt: now - 8 * 60_000,
+      taskCount: 6,
+      currentTask: "LinkedIn content calendar",
+      capabilities: ["copywriting", "social_media", "ebook_gen", "image_gen"],
+    });
+
+    const engineerId = await ctx.db.insert("agents", {
+      name: "Tech Analyst",
+      role: "Engineering & technical analysis",
+      status: "idle",
+      lastHeartbeatAt: now - 15 * 60_000,
+      taskCount: 3,
+      capabilities: ["material_analysis", "tolerance_review", "quoting", "dfm"],
+    });
+
+    const financeId = await ctx.db.insert("agents", {
+      name: "Finance",
+      role: "Financial modeling & strategy",
+      status: "idle",
+      lastHeartbeatAt: now - 20 * 60_000,
+      taskCount: 2,
+      capabilities: ["valuation", "scenario_modeling", "cashflow", "forecasting"],
     });
 
     const builderId = await ctx.db.insert("agents", {
       name: "Builder",
-      role: "Implementation",
-      status: "idle",
-      lastHeartbeatAt: now - 9 * 60_000,
-      taskCount: 2,
-      capabilities: ["git", "deploy"],
+      role: "SaaS platform & deployments",
+      status: "active",
+      lastHeartbeatAt: now - 3 * 60_000,
+      taskCount: 4,
+      currentTask: "Mission Control dashboard",
+      capabilities: ["nextjs", "python", "supabase", "vercel", "github"],
     });
 
-    const gatekeeperId = await ctx.db.insert("agents", {
-      name: "Gatekeeper",
-      role: "Review & approvals",
-      status: "idle",
-      lastHeartbeatAt: now - 12 * 60_000,
-      taskCount: 1,
-      capabilities: ["review", "approve"],
-    });
-
-    const sentinelId = await ctx.db.insert("agents", {
-      name: "Sentinel",
-      role: "Monitoring & alerts",
-      status: "error",
-      lastHeartbeatAt: now - 18 * 60_000,
-      taskCount: 3,
-      currentTask: "reddit monitor cron",
-      capabilities: ["monitoring"],
-    });
-
-    const t1 = await ctx.db.insert("tasks", {
-      externalId: "MC-001",
-      title: "Stand up Mission Control MVP UI",
-      description:
-        "Left agent registry, kanban queue, live feed, broadcast console. Convex persistence.",
-      status: "In Progress",
-      assignedAgentIds: [orchestratorId, builderId],
-      tags: ["mvp", "ui", "nextjs", "convex"],
-      createdAt: now - 52 * 60_000,
-      updatedAt: now - 12 * 60_000,
-      impact: 5,
-      confidence: 4,
-      urgency: 4,
-      effort: 3,
-    });
-
-    const t2 = await ctx.db.insert("tasks", {
-      externalId: "MC-002",
-      title: "Define agent protocol contract",
-      description:
-        "heartbeat(), fetch_new_tasks(), post_updates(), submit_deliverable(), ask_question().",
-      status: "Review",
-      assignedAgentIds: [orchestratorId, gatekeeperId],
-      tags: ["spec", "protocol"],
-      createdAt: now - 140 * 60_000,
-      updatedAt: now - 20 * 60_000,
-      impact: 4,
-      confidence: 4,
-      urgency: 3,
-      effort: 2,
-    });
-
-    await ctx.db.insert("deliverables", {
-      taskId: t2,
-      kind: "Markdown",
-      title: "Protocol spec",
-      createdAt: now - 18 * 60_000,
-      createdByAgentId: gatekeeperId,
-    });
-
-    await ctx.db.insert("tasks", {
-      externalId: "MC-003",
-      title: "Prioritization engine formula",
-      description:
-        "priority_score = impact × confidence × urgency ÷ effort; display rank + color.",
-      status: "Assigned",
-      assignedAgentIds: [scoutId],
-      tags: ["scoring"],
-      createdAt: now - 23 * 60_000,
-      updatedAt: now - 10 * 60_000,
-      impact: 3,
-      confidence: 5,
-      urgency: 2,
-      effort: 1,
-    });
-
-    await ctx.db.insert("tasks", {
-      externalId: "MC-004",
-      title: "Audit log + event schema",
-      description: "Define append-only event table + severity mapping.",
-      status: "Inbox",
-      assignedAgentIds: [],
-      tags: ["db"],
-      createdAt: now - 8 * 60_000,
-      updatedAt: now - 8 * 60_000,
-      impact: 4,
-      confidence: 3,
-      urgency: 2,
-      effort: 2,
+    // Seed some initial events
+    await ctx.db.insert("events", {
+      type: "message",
+      agentId: opsId,
+      title: "ClickUp sync complete",
+      detail: "Imported 41 tasks from ClickUp list 901816091727. Mapped statuses: 7 In Progress, 24 Assigned, 4 Inbox, 6 Done.",
+      priority: "med",
+      createdAt: now - 2 * 60_000,
     });
 
     await ctx.db.insert("events", {
       type: "message",
-      agentId: orchestratorId,
-      title: "Queue synced",
-      detail: "Pulled tasks, re-ranked by urgency.",
-      priority: "med",
-      createdAt: now - 60_000,
-    });
-
-    await ctx.db.insert("events", {
-      type: "deliverable",
-      agentId: scoutId,
-      title: "Deliverable uploaded",
-      detail: "Podcast target list (v1).",
+      agentId: salesId,
+      title: "Reddit scan complete",
+      detail: "49 relevant posts found. Top lead: r/CNC rust prevention (171 upvotes).",
       priority: "low",
-      createdAt: now - 4 * 60_000,
-    });
-
-    await ctx.db.insert("events", {
-      type: "error",
-      agentId: sentinelId,
-      title: "Cron error",
-      detail: "Reddit monitor produced results but flagged error state (needs retry logic).",
-      priority: "high",
-      createdAt: now - 9 * 60_000,
+      createdAt: now - 5 * 60_000,
     });
 
     await ctx.db.insert("events", {
       type: "approval",
-      agentId: gatekeeperId,
-      title: "Approval needed",
-      detail: "Approve posting draft response on r/InjectionMolding.",
+      agentId: marketerId,
+      title: "LinkedIn post ready",
+      detail: "Day 1 post ready: '6061-T6 Aluminum for Automotive Prototypes'. Needs image approval.",
       priority: "med",
+      createdAt: now - 8 * 60_000,
+    });
+
+    await ctx.db.insert("events", {
+      type: "error",
+      agentId: salesId,
+      title: "Cron delivery failed",
+      detail: "Reddit monitor cron: 'cron delivery target is missing'. Fix: configure Discord announce channel.",
+      priority: "high",
+      createdAt: now - 10 * 60_000,
+    });
+
+    await ctx.db.insert("events", {
+      type: "task",
+      agentId: builderId,
+      title: "Mission Control deployed",
+      detail: "v2.0 with Convex persistence, analytics, cron jobs, squad chat. Live at mission-control-rho-eight.vercel.app",
+      priority: "med",
+      createdAt: now - 3 * 60_000,
+    });
+
+    // Seed chat messages
+    await ctx.db.insert("chatMessages", {
+      agentName: "Sales Scout",
+      message: "Found a hot lead on r/MechanicalEngineering — someone asking about tolerances and cost for automotive prototypes. 49 upvotes, 77 comments. RP Group could add real value here.",
       createdAt: now - 12 * 60_000,
     });
 
+    await ctx.db.insert("chatMessages", {
+      agentName: "Content Engine",
+      message: "Today's LinkedIn post is ready: '6061-T6 Aluminum for Automotive Prototypes'. Need Matt to approve an image or I'll go text-only.",
+      createdAt: now - 9 * 60_000,
+    });
+
+    await ctx.db.insert("chatMessages", {
+      agentName: "Ops",
+      message: "4 cron jobs are erroring with 'delivery target missing'. Looks like the Discord announce channel needs to be configured. @Builder can you check?",
+      createdAt: now - 6 * 60_000,
+    });
+
+    await ctx.db.insert("chatMessages", {
+      agentName: "Builder",
+      message: "On it. Also just deployed Mission Control v2.0 — Convex persistence is live. All ClickUp tasks synced.",
+      createdAt: now - 4 * 60_000,
+    });
+
     return { seeded: true };
+  },
+});
+
+// Clear all data (use to reset for fresh seed)
+export const clearAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const tables = ["agents", "tasks", "deliverables", "events", "cronJobs", "chatMessages"] as const;
+    let deleted = 0;
+    for (const table of tables) {
+      const docs = await ctx.db.query(table).collect();
+      for (const doc of docs) {
+        await ctx.db.delete(doc._id);
+        deleted++;
+      }
+    }
+    return { deleted };
   },
 });

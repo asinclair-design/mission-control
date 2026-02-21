@@ -14,6 +14,7 @@ import type * as chat from "../chat.js";
 import type * as cronJobs from "../cronJobs.js";
 import type * as deliverables from "../deliverables.js";
 import type * as events from "../events.js";
+import type * as http from "../http.js";
 import type * as seed from "../seed.js";
 import type * as tasks from "../tasks.js";
 
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   cronJobs: typeof cronJobs;
   deliverables: typeof deliverables;
   events: typeof events;
+  http: typeof http;
   seed: typeof seed;
   tasks: typeof tasks;
 }>;
