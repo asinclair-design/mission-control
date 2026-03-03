@@ -16,6 +16,7 @@ import type * as deliverables from "../deliverables.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
 import type * as leads from "../leads.js";
+import type * as projects from "../projects.js";
 import type * as seed from "../seed.js";
 import type * as tasks from "../tasks.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   http: typeof http;
   leads: typeof leads;
+  projects: typeof projects;
   seed: typeof seed;
   tasks: typeof tasks;
 }>;

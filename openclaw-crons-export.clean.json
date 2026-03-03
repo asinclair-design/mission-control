@@ -1,1 +1,85 @@
-{"jobs": [{"cronId": "6ac2afae-0b1d-41cf-be7c-84319f8491d0", "name": "OpenClaw Workspace Weekly Backup", "scheduleText": "cron 0 10 * * 0 @ Asia/Shanghai", "nextRunAt": 1771725600000}, {"cronId": "99488467-a1d8-4f6c-a908-e613c6e69ba7", "name": "Daily Morning Briefing for Matt", "scheduleText": "cron 0 7 * * * @ Asia/Shanghai", "status": "error", "lastRunAt": 1771628400011, "nextRunAt": 1771714800000, "lastError": "model not allowed: anthropic/minimax-m2.5"}, {"cronId": "201b6f79-e97d-4ac9-8d12-7aa5c53f5e74", "name": "OpenClaw self-update check", "scheduleText": "cron 0 5 * * * @ Australia/Melbourne", "status": "ok", "lastRunAt": 1771610400009, "nextRunAt": 1771696800000}, {"cronId": "e60d5e1b-b3a7-4085-a89a-497a9fce62ca", "name": "Daily Sales Team Update", "scheduleText": "every 86400s", "status": "error", "lastRunAt": 1771641833137, "nextRunAt": 1771728233128, "lastError": "cron delivery target is missing"}, {"cronId": "bd8140c3-6955-43ea-b609-74cc3bb28adc", "name": "Hourly Reddit Monitor", "scheduleText": "every 3600s", "status": "error", "lastRunAt": 1771658544159, "nextRunAt": 1771662175189, "lastError": "cron announce delivery failed"}, {"cronId": "3be9da4b-73ac-4c20-9c7e-4b8512988b3c", "name": "Generate eBook images with Kie.ai", "scheduleText": "at 2026-02-20T00:35:00.000Z", "status": "error", "lastRunAt": 1771547700005, "lastError": "cron announce delivery failed"}, {"cronId": "e0848689-e622-4e5b-8059-da9156325c0d", "name": "Hourly ClickUp Task Manager", "scheduleText": "every 7200s", "status": "error", "lastRunAt": 1771653144987, "nextRunAt": 1771660344978, "lastError": "cron announce delivery failed"}]}
+{
+  "jobs": [
+    {
+      "cronId": "93246593-0edc-4631-a6bb-aa6e04921f9c",
+      "name": "Discord DM Mirror + Ack (poll)",
+      "scheduleText": "every 15s",
+      "status": "ok",
+      "lastRunAt": 1772509027537,
+      "nextRunAt": 1772509072529,
+      "lastError": null
+    },
+    {
+      "cronId": "9059b0c7-f010-473c-9e0d-6d0d31851bf7",
+      "name": "watchdog-discord",
+      "scheduleText": "every 300s",
+      "status": "ok",
+      "lastRunAt": 1772508897228,
+      "nextRunAt": 1772509197228,
+      "lastError": null
+    },
+    {
+      "cronId": "bd8140c3-6955-43ea-b609-74cc3bb28adc",
+      "name": "Hourly Reddit Monitor",
+      "scheduleText": "every 3600s",
+      "status": "ok",
+      "lastRunAt": 1772508497012,
+      "nextRunAt": 1772512097012,
+      "lastError": null
+    },
+    {
+      "cronId": "e0848689-e622-4e5b-8059-da9156325c0d",
+      "name": "Hourly ClickUp Task Manager",
+      "scheduleText": "every 7200s",
+      "status": "ok",
+      "lastRunAt": 1772508639294,
+      "nextRunAt": 1772515839294,
+      "lastError": null
+    },
+    {
+      "cronId": "201b6f79-e97d-4ac9-8d12-7aa5c53f5e74",
+      "name": "OpenClaw self-update check",
+      "scheduleText": "cron 0 5 * * * @ Australia/Melbourne",
+      "status": "error",
+      "lastRunAt": 1772411552628,
+      "nextRunAt": 1772560800000,
+      "lastError": "<html>\n  <head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}@keyframes enlarge-appear{0%{opacity:0;transform:scale(75%) rotate(-90deg)}to{opacity:1;transform:scale(100%) rotate(0deg)}}.logo{color:#8e8ea0;padding-bottom:1.5rem}.scale-appear{animation:enlarge-appear .4s ease-out}@media (min-width:768px){.scale-appear{height:48px;width:48px}}.data:empty{display:none}.data{border-radius:5px;color:…"
+    },
+    {
+      "cronId": "1bd644e9-25ea-4f4f-b555-95b05ec1475c",
+      "name": "Nightly QMD Index Rebuild (Nexuvo)",
+      "scheduleText": "cron 30 3 * * * @ Asia/Hong_Kong",
+      "status": "ok",
+      "lastRunAt": 1772479819512,
+      "nextRunAt": 1772566200000,
+      "lastError": null
+    },
+    {
+      "cronId": "99488467-a1d8-4f6c-a908-e613c6e69ba7",
+      "name": "Daily Morning Briefing for Matt",
+      "scheduleText": "cron 0 7 * * * @ Asia/Shanghai",
+      "status": "error",
+      "lastRunAt": 1772492402817,
+      "nextRunAt": 1772578800000,
+      "lastError": "cron: job execution timed out"
+    },
+    {
+      "cronId": "e60d5e1b-b3a7-4085-a89a-497a9fce62ca",
+      "name": "Daily Sales Team Update",
+      "scheduleText": "every 86400s",
+      "status": "error",
+      "lastRunAt": 1772498025254,
+      "nextRunAt": 1772584425254,
+      "lastError": "No delivery target resolved for channel \"discord\". Set delivery.to."
+    },
+    {
+      "cronId": "6ac2afae-0b1d-41cf-be7c-84319f8491d0",
+      "name": "OpenClaw Workspace Weekly Backup",
+      "scheduleText": "cron 0 10 * * 0 @ Asia/Shanghai",
+      "status": "ok",
+      "lastRunAt": 1772411552612,
+      "nextRunAt": 1772935200000,
+      "lastError": null
+    }
+  ]
+}

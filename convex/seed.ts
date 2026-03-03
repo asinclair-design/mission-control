@@ -143,6 +143,70 @@ export const seedIfEmpty = mutation({
       createdAt: now - 4 * 60_000,
     });
 
+    // Seed mission statement
+    await ctx.db.insert("team", {
+      missionStatement: "Build an autonomous organization of AI agents that automate RP Group operations and manufacturing SaaS development, producing value 24/7",
+      updatedAt: now,
+    });
+
+    // Seed initial projects from ClickUp list
+    const manufacturingSaaSId = await ctx.db.insert("projects", {
+      name: "Manufacturing SaaS Platform",
+      description: "Multi-tenant manufacturing SaaS (Next.js + Python microservices + Supabase + AI tooling)",
+      status: "active",
+      priority: 10,
+      progress: 35,
+      googleDriveFolderId: "1JCC2gBEpP79gnJlpgKfzQX3GQ_frBwhC",
+      googleDriveFolderUrl: "https://drive.google.com/drive/folders/1JCC2gBEpP79gnJlpgKfzQX3GQ_frBwhC",
+      taskIds: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const rpGroupOpsId = await ctx.db.insert("projects", {
+      name: "RP Group Operations Automation",
+      description: "Automate RP Group operations: quoting, customer follow-ups, lead tracking, documentation",
+      status: "active",
+      priority: 9,
+      progress: 25,
+      taskIds: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const salesMarketingId = await ctx.db.insert("projects", {
+      name: "Sales & Marketing Engine",
+      description: "Reddit monitoring, LinkedIn content, lead generation, email campaigns",
+      status: "active",
+      priority: 8,
+      progress: 40,
+      taskIds: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // ElderCare Assist - paused
+    await ctx.db.insert("projects", {
+      name: "ElderCare Assist",
+      description: "Healthcare/assisted living marketplace project — ON HOLD",
+      status: "paused",
+      priority: 3,
+      progress: 15,
+      taskIds: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Seed some initial memories
+    await ctx.db.insert("memories", {
+      date: new Date(now).toISOString().split('T')[0],
+      content: "Mission Control v2.0 deployed with Convex persistence. Added Projects, Calendar, Memories, Documents, and Team screens based on Alex Finn's recommendations.",
+      summary: "Major Mission Control upgrade deployed",
+      projectIds: [manufacturingSaaSId],
+      tags: ["deployment", "mission-control", "convex"],
+      createdAt: now,
+    });
+
     return { seeded: true };
   },
 });
@@ -151,7 +215,7 @@ export const seedIfEmpty = mutation({
 export const clearAll = mutation({
   args: {},
   handler: async (ctx) => {
-    const tables = ["agents", "tasks", "deliverables", "events", "cronJobs", "chatMessages"] as const;
+    const tables = ["agents", "tasks", "deliverables", "events", "cronJobs", "chatMessages", "projects", "calendarEvents", "memories", "documents", "team"] as const;
     let deleted = 0;
     for (const table of tables) {
       const docs = await ctx.db.query(table).collect();
