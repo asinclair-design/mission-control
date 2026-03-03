@@ -23,7 +23,7 @@ const columns: TaskStatus[] = [
   "Done",
 ];
 
-type Tab = "dashboard" | "analytics" | "crons" | "errors" | "chat" | "leads";
+type Tab = "dashboard" | "projects" | "calendar" | "memories" | "documents" | "team" | "analytics" | "crons" | "errors" | "chat" | "leads";
 
 function scoreColor(score: number) {
   if (score >= 18) return "text-[color:var(--amber)]";
@@ -46,6 +46,23 @@ function timeAgo(ms: number) {
   if (diff < 3600_000) return Math.round(diff / 60_000) + "m";
   if (diff < 86400_000) return Math.round(diff / 3600_000) + "h";
   return Math.round(diff / 86400_000) + "d";
+}
+
+function formatDate(ms: number) {
+  return new Date(ms).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(ms: number) {
+  return new Date(ms).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function TaskDrawer({
@@ -302,6 +319,7 @@ export default function Home() {
   const [broadcast, setBroadcast] = useState("");
   const [chatMsg, setChatMsg] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [calendarView, setCalendarView] = useState<"week" | "month">("week");
 
   // Queries
   const agents = useQuery(api.agents.list) ?? [];
@@ -311,6 +329,13 @@ export default function Home() {
   const analytics = useQuery(api.analytics.summary);
   const chatMessages = useQuery(api.chat.list, { limit: 50 }) ?? [];
   const leads = useQuery(api.leads.listRecent, { limit: 100 }) ?? [];
+  
+  // New queries for projects, calendar, memories, documents, team
+  const projects = useQuery(api.projects.listProjects) ?? [];
+  const calendarEvents = useQuery(api.projects.listCalendarEvents, {}) ?? [];
+  const memories = useQuery(api.projects.listMemories, { limit: 50 }) ?? [];
+  const documents = useQuery(api.projects.listDocuments, {}) ?? [];
+  const team = useQuery(api.projects.getTeam);
 
   // Mutations
   const seedIfEmpty = useMutation(api.seed.seedIfEmpty);
@@ -322,6 +347,10 @@ export default function Home() {
   const removeAgent = useMutation(api.agents.remove);
   const createAgent = useMutation(api.agents.create);
   const sendChat = useMutation(api.chat.send);
+  
+  // New mutations for projects
+  const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
+  const createProject = useMutation(api.projects.createProject);
 
   useEffect(() => {
     void seedIfEmpty({});
@@ -355,8 +384,24 @@ export default function Home() {
     [feed]
   );
 
+  // Separate active and paused projects
+  const activeProjects = useMemo(() => 
+    projects.filter((p) => p.status !== "paused"),
+    [projects]
+  );
+  
+  const pausedProjects = useMemo(() => 
+    projects.filter((p) => p.status === "paused"),
+    [projects]
+  );
+
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: "dashboard", label: "Dashboard" },
+    { key: "projects", label: "Projects", count: projects.length },
+    { key: "calendar", label: "Calendar", count: calendarEvents.length },
+    { key: "memories", label: "Memories", count: memories.length },
+    { key: "documents", label: "Documents", count: documents.length },
+    { key: "team", label: "Team" },
     { key: "analytics", label: "Analytics" },
     { key: "crons", label: "Cron Jobs", count: cronJobs.length },
     { key: "errors", label: "Errors", count: errorEvents.length },
@@ -1188,3 +1233,4 @@ export default function Home() {
     </main>
   );
 }
+// Cache bust 1772519810
