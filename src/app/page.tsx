@@ -853,6 +853,439 @@ export default function Home() {
         </div>
       )}
 
+      {/* ═════════════════════════════ PROJECTS TAB ═════════════════════════════ */}
+      {tab === "projects" && (
+        <div className="space-y-6">
+          {/* Active Projects */}
+          <div className="panel overflow-hidden">
+            <div className="panelHeader flex items-center justify-between">
+              <div>
+                <div className="text-sm text-[color:var(--muted)]">Active</div>
+                <div className="font-semibold">Active Projects ({activeProjects.length})</div>
+              </div>
+              <button
+                className="button !py-2 !px-3"
+                type="button"
+                onClick={async () => {
+                  const name = prompt("Project name:");
+                  if (!name) return;
+                  const description = prompt("Description:") || "";
+                  await createProject({ name, description });
+                }}
+              >
+                + Project
+              </button>
+            </div>
+            <div className="panelBody">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeProjects.map((p) => (
+                  <div
+                    key={p._id}
+                    className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.18)] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{p.name}</div>
+                        <div className="text-sm text-[color:var(--muted)] line-clamp-2">
+                          {p.description || "No description"}
+                        </div>
+                      </div>
+                      <span
+                        className={
+                          "badge shrink-0 " +
+                          (p.priority >= 8
+                            ? "!text-[color:var(--danger)]"
+                            : p.priority >= 5
+                              ? "!text-[color:var(--amber)]"
+                              : "")
+                        }
+                      >
+                        Priority {p.priority}
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs text-[color:var(--muted)] mb-1">
+                        <span>Progress</span>
+                        <span>{p.progress}%</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-[rgba(255,255,255,0.1)] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[color:var(--cyan)]"
+                          style={{ width: `${p.progress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="badge">{p.status}</span>
+                      {p.googleDriveFolderUrl && (
+                        <a
+                          href={p.googleDriveFolderUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="badge !text-[color:var(--cyan)]"
+                        >
+                          Drive ↗
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        className="button !py-1 !px-2 !text-xs"
+                        type="button"
+                        onClick={async () => {
+                          await updateProjectStatus({
+                            projectId: p._id,
+                            status: "paused",
+                          });
+                        }}
+                      >
+                        Pause
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {activeProjects.length === 0 && (
+                <div className="text-sm text-[color:var(--muted)]">
+                  No active projects. Create one to get started.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Paused Projects */}
+          {pausedProjects.length > 0 && (
+            <div className="panel overflow-hidden">
+              <div className="panelHeader">
+                <div>
+                  <div className="text-sm text-[color:var(--muted)]">Paused</div>
+                  <div className="font-semibold">Paused Projects ({pausedProjects.length})</div>
+                </div>
+              </div>
+              <div className="panelBody">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {pausedProjects.map((p) => (
+                    <div
+                      key={p._id}
+                      className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.18)] p-4 opacity-70"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate">{p.name}</div>
+                          <div className="text-sm text-[color:var(--muted)] line-clamp-2">
+                            {p.description || "No description"}
+                          </div>
+                        </div>
+                        <span className="badge !text-[color:var(--amber)]">
+                          paused
+                        </span>
+                      </div>
+
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-[color:var(--muted)] mb-1">
+                          <span>Progress</span>
+                          <span>{p.progress}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-[rgba(255,255,255,0.1)] overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-[color:var(--amber)]"
+                            style={{ width: `${p.progress}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          className="button !py-1 !px-2 !text-xs"
+                          type="button"
+                          onClick={async () => {
+                            await updateProjectStatus({
+                              projectId: p._id,
+                              status: "active",
+                            });
+                          }}
+                        >
+                          Resume
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═════════════════════════════ CALENDAR TAB ═════════════════════════════ */}
+      {tab === "calendar" && (
+        <div className="panel overflow-hidden">
+          <div className="panelHeader flex items-center justify-between">
+            <div>
+              <div className="text-sm text-[color:var(--muted)]">Events</div>
+              <div className="font-semibold">Calendar ({calendarEvents.length})</div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                className={`button !py-2 !px-3 ${calendarView === "week" ? "!text-[color:var(--amber)]" : ""}`}
+                type="button"
+                onClick={() => setCalendarView("week")}
+              >
+                Week
+              </button>
+              <button
+                className={`button !py-2 !px-3 ${calendarView === "month" ? "!text-[color:var(--amber)]" : ""}`}
+                type="button"
+                onClick={() => setCalendarView("month")}
+              >
+                Month
+              </button>
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="space-y-3">
+              {calendarEvents
+                .sort((a, b) => b.startTime - a.startTime)
+                .map((e) => (
+                <div
+                  key={e._id}
+                  className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.14)] p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold">{e.title}</div>
+                      {e.description && (
+                        <div className="text-sm text-[color:var(--muted)] mt-1">
+                          {e.description}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-sm font-medium">
+                        {formatDateTime(e.startTime)}
+                      </div>
+                      <div className="text-xs text-[color:var(--muted)]">
+                        {e.endTime ? formatDateTime(e.endTime) : "No end time"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span
+                      className={
+                        "badge " +
+                        (e.source === "google"
+                          ? "!text-[color:var(--cyan)]"
+                          : "!text-[color:var(--amber)]")
+                      }
+                    >
+                      {e.source}
+                    </span>
+                    {e.externalId && (
+                      <span className="badge text-[10px]">
+                        ID: {e.externalId}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {calendarEvents.length === 0 && (
+              <div className="text-sm text-[color:var(--muted)]">
+                No calendar events. Events will appear here when synced from Google Calendar or Cron.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════ MEMORIES TAB ═════════════════════════════ */}
+      {tab === "memories" && (
+        <div className="panel overflow-hidden">
+          <div className="panelHeader">
+            <div>
+              <div className="text-sm text-[color:var(--muted)]">Journal</div>
+              <div className="font-semibold">Memories ({memories.length})</div>
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="space-y-4">
+              {memories
+                .sort((a, b) => b.createdAt - a.createdAt)
+                .map((m) => (
+                <div
+                  key={m._id}
+                  className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.14)] p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-[color:var(--muted)] mb-1">
+                        {formatDate(m.createdAt)}
+                      </div>
+                      <div className="text-[color:rgba(245,246,250,0.9)] leading-relaxed">
+                        {m.content}
+                      </div>
+                    </div>
+                  </div>
+                  {(m.tags ?? []).length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(m.tags ?? []).map((tag: string) => (
+                        <span key={tag} className="badge !text-[10px]">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {memories.length === 0 && (
+              <div className="text-sm text-[color:var(--muted)]">
+                No memories recorded yet. Memories capture important context and decisions.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════ DOCUMENTS TAB ═════════════════════════════ */}
+      {tab === "documents" && (
+        <div className="panel overflow-hidden">
+          <div className="panelHeader">
+            <div>
+              <div className="text-sm text-[color:var(--muted)]">Files</div>
+              <div className="font-semibold">Documents ({documents.length})</div>
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="space-y-3">
+              {documents.map((d) => (
+                <div
+                  key={d._id}
+                  className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.14)] p-4 flex items-center justify-between"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold truncate">{d.title}</div>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      <span
+                        className={
+                          "badge !text-[10px] " +
+                          (d.type === "PRD"
+                            ? "!text-[color:var(--cyan)]"
+                            : d.type === "Architecture"
+                              ? "!text-[color:var(--amber)]"
+                              : d.type === "Newsletter"
+                                ? "!text-[color:var(--ok)]"
+                                : "")
+                        }
+                      >
+                        {d.type}
+                      </span>
+                      {d.projectId && (
+                        <span className="badge !text-[10px] text-[color:var(--muted)]">
+                          Linked to project
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {d.googleDriveUrl && (
+                    <a
+                      href={d.googleDriveUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="button !py-2 !px-3 shrink-0 ml-4"
+                    >
+                      Open ↗
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+            {documents.length === 0 && (
+              <div className="text-sm text-[color:var(--muted)]">
+                No documents yet. Documents are linked from Google Drive.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════ TEAM TAB ═════════════════════════════ */}
+      {tab === "team" && (
+        <div className="space-y-6">
+          {/* Mission Statement */}
+          {team?.missionStatement && (
+            <div className="panel overflow-hidden">
+              <div className="panelHeader">
+                <div>
+                  <div className="text-sm text-[color:var(--muted)]">Mission</div>
+                  <div className="font-semibold">Our Mission</div>
+                </div>
+              </div>
+              <div className="panelBody">
+                <p className="text-[color:rgba(245,246,250,0.9)] leading-relaxed text-lg">
+                  {team.missionStatement}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Agent Org Chart */}
+          <div className="panel overflow-hidden">
+            <div className="panelHeader">
+              <div>
+                <div className="text-sm text-[color:var(--muted)]">Organization</div>
+                <div className="font-semibold">Agent Org Chart ({agents.length})</div>
+              </div>
+            </div>
+            <div className="panelBody">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {agents.map((a) => (
+                  <div
+                    key={a._id}
+                    className="rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.18)] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-semibold">{a.name}</div>
+                        <div className="text-sm text-[color:var(--muted)]">
+                          {a.role}
+                        </div>
+                      </div>
+                      <span
+                        className={
+                          "badge " +
+                          (a.status === "active"
+                            ? "!text-[color:var(--ok)]"
+                            : a.status === "error"
+                              ? "!text-[color:var(--danger)]"
+                              : a.status === "paused"
+                                ? "!text-[color:var(--amber)]"
+                                : "")
+                        }
+                      >
+                        {a.status}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="badge text-[10px]">
+                        {a.taskCount} tasks
+                      </span>
+                      <span className="badge text-[10px]">
+                        hb {timeAgo(a.lastHeartbeatAt)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═════════════════════════════ ANALYTICS TAB ═════════════════════════════ */}
       {tab === "analytics" && analytics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
