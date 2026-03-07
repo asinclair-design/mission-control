@@ -492,6 +492,7 @@ export default function Home() {
             className="button"
             type="button"
             onClick={async () => {
+              alert("Button clicked! Starting reset process...");
               if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
               
               // Debug: check if mutation exists
