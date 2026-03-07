@@ -471,7 +471,7 @@ export default function Home() {
       {tab === "dashboard" && (
         <div className="grid grid-cols-12 gap-4">
           {/* Left: Agent Registry */}
-          <section className={`${agentsCollapsed ? 'col-span-12 lg:col-span-1' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
+          <section className={`${agentsCollapsed ? 'col-span-12 lg:col-span-auto lg:w-12' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
             <div className="panelHeader flex items-center justify-between">
               {!agentsCollapsed && (
                 <div>
@@ -481,43 +481,47 @@ export default function Home() {
                   <div className="font-semibold">Agents ({agents.length})</div>
                 </div>
               )}
-              <div className="flex gap-2">
-                <button
-                  className="button !py-2 !px-3"
-                  type="button"
-                  onClick={async () => {
-                    const name = prompt("Agent name:");
-                    if (!name) return;
-                    const role = prompt("Agent role:") || "General";
-                    await createAgent({ name, role });
-                    await appendEvent({
-                      type: "task",
-                      title: "Agent spawned",
-                      detail: `Spawned agent: ${name} (${role})`,
-                      priority: "med",
-                    });
-                  }}
-                >
-                  Spawn
-                </button>
-                <button
-                  className="button !py-2 !px-3"
-                  type="button"
-                  onClick={async () => {
-                    const title = prompt("New task title:");
-                    if (!title) return;
-                    const { id } = await createTask({ title, tags: ["manual"] });
-                    await appendEvent({
-                      type: "task",
-                      title: "Task created",
-                      detail: `Created: ${title}`,
-                      priority: "low",
-                      taskId: id,
-                    });
-                  }}
-                >
-                  + Task
-                </button>
+              <div className={`flex gap-2 ${agentsCollapsed ? 'flex-col' : ''}`}>
+                {!agentsCollapsed && (
+                  <>
+                    <button
+                      className="button !py-2 !px-3"
+                      type="button"
+                      onClick={async () => {
+                        const name = prompt("Agent name:");
+                        if (!name) return;
+                        const role = prompt("Agent role:") || "General";
+                        await createAgent({ name, role });
+                        await appendEvent({
+                          type: "task",
+                          title: "Agent spawned",
+                          detail: `Spawned agent: ${name} (${role})`,
+                          priority: "med",
+                        });
+                      }}
+                    >
+                      Spawn
+                    </button>
+                    <button
+                      className="button !py-2 !px-3"
+                      type="button"
+                      onClick={async () => {
+                        const title = prompt("New task title:");
+                        if (!title) return;
+                        const { id } = await createTask({ title, tags: ["manual"] });
+                        await appendEvent({
+                          type: "task",
+                          title: "Task created",
+                          detail: `Created: ${title}`,
+                          priority: "low",
+                          taskId: id,
+                        });
+                      }}
+                    >
+                      + Task
+                    </button>
+                  </>
+                )}
                 <button
                   className="button !py-2 !px-3"
                   type="button"
@@ -772,8 +776,8 @@ export default function Home() {
           </section>
 
           {/* Right: Live Feed */}
-          <section className={`${liveFeedCollapsed ? 'col-span-12 lg:col-span-1' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
-            <div className="panelHeader flex items-center justify-between">
+          <section className={`${liveFeedCollapsed ? 'col-span-12 lg:col-span-auto lg:w-12' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
+            <div className={`panelHeader flex items-center ${liveFeedCollapsed ? 'justify-center' : 'justify-between'}`}>
               {!liveFeedCollapsed && (
                 <div>
                   <div className="text-sm text-[color:var(--muted)]">Realtime</div>
