@@ -320,6 +320,10 @@ export default function Home() {
   const [chatMsg, setChatMsg] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
+  
+  // Collapsible panel states for better screen space on small screens
+  const [agentsCollapsed, setAgentsCollapsed] = useState(false);
+  const [liveFeedCollapsed, setLiveFeedCollapsed] = useState(false);
 
   // Queries
   const agents = useQuery(api.agents.list) ?? [];
@@ -467,14 +471,16 @@ export default function Home() {
       {tab === "dashboard" && (
         <div className="grid grid-cols-12 gap-4">
           {/* Left: Agent Registry */}
-          <section className="col-span-12 lg:col-span-3 panel overflow-hidden">
+          <section className={`${agentsCollapsed ? 'col-span-12 lg:col-span-1' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
             <div className="panelHeader flex items-center justify-between">
-              <div>
-                <div className="text-sm text-[color:var(--muted)]">
-                  Registry
+              {!agentsCollapsed && (
+                <div>
+                  <div className="text-sm text-[color:var(--muted)]">
+                    Registry
+                  </div>
+                  <div className="font-semibold">Agents ({agents.length})</div>
                 </div>
-                <div className="font-semibold">Agents ({agents.length})</div>
-              </div>
+              )}
               <div className="flex gap-2">
                 <button
                   className="button !py-2 !px-3"
@@ -512,8 +518,17 @@ export default function Home() {
                 >
                   + Task
                 </button>
+                <button
+                  className="button !py-2 !px-3"
+                  type="button"
+                  onClick={() => setAgentsCollapsed(!agentsCollapsed)}
+                  title={agentsCollapsed ? "Expand Agents" : "Collapse Agents"}
+                >
+                  {agentsCollapsed ? "→" : "←"}
+                </button>
               </div>
             </div>
+            {!agentsCollapsed && (
             <div className="panelBody space-y-3 max-h-[65vh] overflow-y-auto">
               {agents.map((a) => (
                 <div
@@ -613,10 +628,11 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            )}
           </section>
 
           {/* Center: Kanban */}
-          <section className="col-span-12 lg:col-span-6 panel overflow-hidden">
+          <section className={`col-span-12 ${agentsCollapsed && liveFeedCollapsed ? 'lg:col-span-10' : agentsCollapsed || liveFeedCollapsed ? 'lg:col-span-8' : 'lg:col-span-6'} panel overflow-hidden transition-all duration-300`}>
             <div className="panelHeader flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-sm text-[color:var(--muted)]">
@@ -660,11 +676,11 @@ export default function Home() {
                               onClick={() => setSelectedTaskId(t._id)}
                             >
                               <div className="flex items-start justify-between gap-1">
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <div className="text-[10px] text-[color:rgba(245,246,250,0.45)]">
                                     {t.externalId ?? t._id.slice(-6)}
                                   </div>
-                                  <div className="font-semibold text-xs leading-4 truncate">
+                                  <div className="font-semibold text-xs leading-4 line-clamp-2" title={t.title}>
                                     {t.title}
                                   </div>
                                 </div>
@@ -756,11 +772,24 @@ export default function Home() {
           </section>
 
           {/* Right: Live Feed */}
-          <section className="col-span-12 lg:col-span-3 panel overflow-hidden">
-            <div className="panelHeader">
-              <div className="text-sm text-[color:var(--muted)]">Realtime</div>
-              <div className="font-semibold">Live Feed ({feed.length})</div>
+          <section className={`${liveFeedCollapsed ? 'col-span-12 lg:col-span-1' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
+            <div className="panelHeader flex items-center justify-between">
+              {!liveFeedCollapsed && (
+                <div>
+                  <div className="text-sm text-[color:var(--muted)]">Realtime</div>
+                  <div className="font-semibold">Live Feed ({feed.length})</div>
+                </div>
+              )}
+              <button
+                className="button !py-2 !px-3"
+                type="button"
+                onClick={() => setLiveFeedCollapsed(!liveFeedCollapsed)}
+                title={liveFeedCollapsed ? "Expand Live Feed" : "Collapse Live Feed"}
+              >
+                {liveFeedCollapsed ? "←" : "→"}
+              </button>
             </div>
+            {!liveFeedCollapsed && (
             <div className="panelBody space-y-3 max-h-[65vh] overflow-y-auto">
               {feed.map((e) => (
                 <div
@@ -791,6 +820,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            )}
           </section>
 
           {/* Broadcast */}
