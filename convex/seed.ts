@@ -314,16 +314,6 @@ export const forceReseedAgents = mutation({
       capabilities: ["market_research", "competitive_analysis", "technology_evaluation", "trend_monitoring"],
     });
 
-    // Seed events
-    await ctx.db.insert("events", {
-      type: "message",
-      agentId: mainId,
-      title: "Agents re-seeded",
-      detail: "Discord agents loaded: main, manufacturing, quoting, saas-architect, code-reviewer, research",
-      priority: "med",
-      createdAt: now,
-    });
-
     return { 
       reseeded: true, 
       agents: ["main", "manufacturing", "quoting", "saas-architect", "code-reviewer", "research"]
