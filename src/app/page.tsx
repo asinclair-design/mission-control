@@ -492,17 +492,23 @@ export default function Home() {
             className="button"
             type="button"
             onClick={async () => {
-              if (confirm("Clear ALL data and re-seed with Discord agents? This will reset everything.")) {
-                console.log("[Reset] Starting clearAllData mutation...");
-                try {
-                  const result = await clearAllData({});
-                  console.log("[Reset] clearAllData result:", result);
-                  alert(`Data cleared: ${result.deleted} items deleted. Reloading...`);
-                  setTimeout(() => window.location.reload(), 500);
-                } catch (err) {
-                  console.error("[Reset] Error in clearAllData:", err);
-                  alert("Error: " + (err instanceof Error ? err.message : String(err)));
-                }
+              if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
+              
+              const btn = document.activeElement as HTMLButtonElement;
+              const originalText = btn?.textContent || "Reset & Re-seed";
+              if (btn) btn.textContent = "Clearing...";
+              
+              try {
+                console.log("[Reset] Calling clearAllData...");
+                const result = await clearAllData({});
+                console.log("[Reset] Success:", result);
+                alert(`Cleared ${result.deleted} items. Reloading...`);
+                window.location.reload();
+              } catch (err) {
+                console.error("[Reset] Failed:", err);
+                const msg = err instanceof Error ? err.message : String(err);
+                alert("Failed: " + msg);
+                if (btn) btn.textContent = originalText;
               }
             }}
           >
