@@ -3,7 +3,7 @@ import { v } from "convex/values";
 
 // Seed RP Group agents based on Matt's actual business needs.
 // Safe to call multiple times; no-ops if agents already exist.
-// Agents match Discord configuration in /agents folder.
+// Agents match Discord configuration.
 
 export const seedIfEmpty = mutation({
   args: {
@@ -15,133 +15,132 @@ export const seedIfEmpty = mutation({
     if (existing) return { seeded: false };
 
     // Agents matching Discord configuration
-    const mainId = await ctx.db.insert("agents", {
-      name: "main",
-      role: "Orchestrator - coordinates all agents and routes requests",
+    const opsId = await ctx.db.insert("agents", {
+      name: "Ops",
+      role: "Operations & task management",
       status: "active",
       lastHeartbeatAt: now - 2 * 60_000,
-      taskCount: 15,
-      currentTask: "coordinating agent tasks",
-      capabilities: ["orchestration", "routing", "tracking", "escalation"],
+      taskCount: 12,
+      currentTask: "syncing ClickUp tasks",
+      capabilities: ["operations", "task_management", "clickup_sync", "coordination"],
     });
 
-    const manufacturingId = await ctx.db.insert("agents", {
-      name: "manufacturing",
-      role: "Manufacturing expert - IATF 16949, PT builds, automotive processes",
+    const salesScoutId = await ctx.db.insert("agents", {
+      name: "Sales Scout",
+      role: "BD, lead gen & outreach",
       status: "active",
       lastHeartbeatAt: now - 5 * 60_000,
       taskCount: 8,
-      currentTask: "quality compliance review",
-      capabilities: ["iatf_16949", "pt_builds", "quality_management", "process_optimization"],
+      currentTask: "Reddit lead monitoring",
+      capabilities: ["lead_generation", "outreach", "reddit_monitoring", "bd"],
     });
 
-    const quotingId = await ctx.db.insert("agents", {
-      name: "quoting",
-      role: "Quoting specialist - cost modeling, RFQ responses, pricing",
+    const contentEngineId = await ctx.db.insert("agents", {
+      name: "Content Engine",
+      role: "Marketing & content creation",
       status: "active",
       lastHeartbeatAt: now - 8 * 60_000,
       taskCount: 6,
-      currentTask: "PT quote for Tesla RFQ",
-      capabilities: ["cost_modeling", "rfq_response", "pricing_strategy", "parametric_quotes"],
+      currentTask: "LinkedIn content calendar",
+      capabilities: ["content_creation", "marketing", "linkedin", "copywriting"],
     });
 
-    const saasArchitectId = await ctx.db.insert("agents", {
-      name: "saas-architect",
-      role: "SaaS architect - Next.js, Python, Supabase, AI integration",
-      status: "active",
-      lastHeartbeatAt: now - 3 * 60_000,
-      taskCount: 12,
-      currentTask: "Mission Control dashboard improvements",
-      capabilities: ["nextjs", "python", "supabase", "ai_integration", "architecture"],
-    });
-
-    const codeReviewerId = await ctx.db.insert("agents", {
-      name: "code-reviewer",
-      role: "Code reviewer - quality, security, best practices",
+    const techAnalystId = await ctx.db.insert("agents", {
+      name: "Tech Analyst",
+      role: "Engineering & technical analysis",
       status: "idle",
       lastHeartbeatAt: now - 15 * 60_000,
       taskCount: 3,
-      capabilities: ["code_review", "security_audit", "quality_assurance", "best_practices"],
+      capabilities: ["technical_analysis", "engineering", "research", "evaluation"],
     });
 
-    const researchId = await ctx.db.insert("agents", {
-      name: "research",
-      role: "Research analyst - market research, competitive analysis",
-      status: "active",
+    const financeId = await ctx.db.insert("agents", {
+      name: "Finance",
+      role: "Financial modeling & strategy",
+      status: "idle",
       lastHeartbeatAt: now - 20 * 60_000,
+      taskCount: 2,
+      capabilities: ["financial_modeling", "strategy", "analysis", "forecasting"],
+    });
+
+    const builderId = await ctx.db.insert("agents", {
+      name: "Builder",
+      role: "SaaS platform & deployments",
+      status: "active",
+      lastHeartbeatAt: now - 3 * 60_000,
       taskCount: 4,
-      currentTask: "EV market trends analysis",
-      capabilities: ["market_research", "competitive_analysis", "technology_evaluation", "trend_monitoring"],
+      currentTask: "Mission Control dashboard",
+      capabilities: ["saas_development", "deployment", "architecture", "full_stack"],
     });
 
     // Seed some initial events
     await ctx.db.insert("events", {
       type: "message",
-      agentId: mainId,
-      title: "Agent files system deployed",
-      detail: "Added agent file viewer/editor to Mission Control. Can now view and edit AGENT.md, SOUL.md, MEMORY.md for all agents.",
+      agentId: opsId,
+      title: "ClickUp sync complete",
+      detail: "Imported 41 tasks from ClickUp list 901816091727. Mapped statuses: 7 In Progress, 24 Assigned, 4 Inbox, 6 Done.",
       priority: "med",
       createdAt: now - 2 * 60_000,
     });
 
     await ctx.db.insert("events", {
       type: "message",
-      agentId: manufacturingId,
-      title: "IATF audit prep complete",
-      detail: "All documentation ready for customer quality audit. Control plans updated.",
+      agentId: salesScoutId,
+      title: "Reddit scan complete",
+      detail: "49 relevant posts found. Top lead: r/CNC rust prevention (171 upvotes).",
       priority: "med",
       createdAt: now - 5 * 60_000,
     });
 
     await ctx.db.insert("events", {
       type: "message",
-      agentId: quotingId,
-      title: "RFQ response submitted",
-      detail: "Tesla PT build quote submitted. 24-hour turnaround achieved.",
+      agentId: contentEngineId,
+      title: "LinkedIn post ready",
+      detail: "Day 1 post ready: '6061-T6 Aluminum for Automotive Prototypes'. Needs image approval.",
       priority: "med",
       createdAt: now - 8 * 60_000,
     });
 
     await ctx.db.insert("events", {
       type: "message",
-      agentId: saasArchitectId,
-      title: "Mission Control v2.1 deployed",
-      detail: "Collapsible panels and agent file editor now live.",
+      agentId: builderId,
+      title: "Mission Control deployed",
+      detail: "v2.0 with Convex persistence, analytics, cron jobs, squad chat. Live at mission-control-rho-eight.vercel.app",
       priority: "med",
       createdAt: now - 3 * 60_000,
     });
 
     await ctx.db.insert("events", {
       type: "message",
-      agentId: researchId,
-      title: "EV market report ready",
-      detail: "Q1 2026 EV manufacturing trends analysis complete. Key findings: 23% growth in APAC.",
+      agentId: techAnalystId,
+      title: "Tech stack evaluation complete",
+      detail: "Evaluated 5 manufacturing SaaS platforms. Recommendation: custom build with Next.js + Supabase.",
       priority: "low",
       createdAt: now - 20 * 60_000,
     });
 
     // Seed chat messages
     await ctx.db.insert("chatMessages", {
-      agentName: "main",
-      message: "All agent files have been updated with Anthropic best practices. Each agent now has comprehensive AGENT.md and SOUL.md documentation.",
+      agentName: "Ops",
+      message: "ClickUp sync is running smoothly. 41 tasks imported and tracking correctly.",
       createdAt: now - 12 * 60_000,
     });
 
     await ctx.db.insert("chatMessages", {
-      agentName: "saas-architect",
-      message: "Just deployed the agent file editor to Mission Control. You can now click 'Files' on any agent to view and edit their configuration.",
+      agentName: "Builder",
+      message: "Just deployed Mission Control v2.0. New features: agent registry, task kanban, live feed, squad chat.",
       createdAt: now - 9 * 60_000,
     });
 
     await ctx.db.insert("chatMessages", {
-      agentName: "manufacturing",
-      message: "Tesla's new drawing revision is in. Need to review tolerance changes and update control plan.",
+      agentName: "Sales Scout",
+      message: "Found a hot lead on Reddit - r/CNC discussion about rust prevention with 171 upvotes. Should I reach out?",
       createdAt: now - 6 * 60_000,
     });
 
     await ctx.db.insert("chatMessages", {
-      agentName: "quoting",
-      message: "Working on the Lear RFQ. Complex assembly with 12 components. Should have preliminary costs by EOD.",
+      agentName: "Content Engine",
+      message: "LinkedIn content calendar is set for the week. First post about 6061-T6 aluminum is ready for approval.",
       createdAt: now - 4 * 60_000,
     });
 
@@ -202,10 +201,10 @@ export const seedIfEmpty = mutation({
     // Seed some initial memories
     await ctx.db.insert("memories", {
       date: new Date(now).toISOString().split('T')[0],
-      content: "Updated all agent documentation following Anthropic best practices. Each agent now has detailed AGENT.md (role, responsibilities, boundaries) and SOUL.md (identity, voice, beliefs).",
-      summary: "Agent documentation overhaul complete",
+      content: "Mission Control v2.0 deployed with Discord agent integration. Agents now match Discord configuration: Ops, Sales Scout, Content Engine, Tech Analyst, Finance, Builder.",
+      summary: "Discord agents integrated into Mission Control",
       projectIds: [manufacturingSaaSId],
-      tags: ["agents", "documentation", "anthropic-best-practices"],
+      tags: ["agents", "discord", "mission-control"],
       createdAt: now,
     });
 
@@ -273,89 +272,88 @@ export const forceReseedAgents = mutation({
     // Note: This will fail if agents with these names already exist
     try {
       await ctx.db.insert("agents", {
-        name: "main",
-        role: "Orchestrator - coordinates all agents and routes requests",
+        name: "Ops",
+        role: "Operations & task management",
         status: "active",
         lastHeartbeatAt: now - 2 * 60_000,
-        taskCount: 15,
-        currentTask: "coordinating agent tasks",
-        capabilities: ["orchestration", "routing", "tracking", "escalation"],
+        taskCount: 12,
+        currentTask: "syncing ClickUp tasks",
+        capabilities: ["operations", "task_management", "clickup_sync", "coordination"],
       });
-      inserted.push("main");
+      inserted.push("Ops");
     } catch (e) {
       // Agent may already exist
     }
 
     try {
       await ctx.db.insert("agents", {
-        name: "manufacturing",
-        role: "Manufacturing expert - IATF 16949, PT builds, automotive processes",
+        name: "Sales Scout",
+        role: "BD, lead gen & outreach",
         status: "active",
         lastHeartbeatAt: now - 5 * 60_000,
         taskCount: 8,
-        currentTask: "quality compliance review",
-        capabilities: ["iatf_16949", "pt_builds", "quality_management", "process_optimization"],
+        currentTask: "Reddit lead monitoring",
+        capabilities: ["lead_generation", "outreach", "reddit_monitoring", "bd"],
       });
-      inserted.push("manufacturing");
+      inserted.push("Sales Scout");
     } catch (e) {
       // Agent may already exist
     }
 
     try {
       await ctx.db.insert("agents", {
-        name: "quoting",
-        role: "Quoting specialist - cost modeling, RFQ responses, pricing",
+        name: "Content Engine",
+        role: "Marketing & content creation",
         status: "active",
         lastHeartbeatAt: now - 8 * 60_000,
         taskCount: 6,
-        currentTask: "PT quote for Tesla RFQ",
-        capabilities: ["cost_modeling", "rfq_response", "pricing_strategy", "parametric_quotes"],
+        currentTask: "LinkedIn content calendar",
+        capabilities: ["content_creation", "marketing", "linkedin", "copywriting"],
       });
-      inserted.push("quoting");
+      inserted.push("Content Engine");
     } catch (e) {
       // Agent may already exist
     }
 
     try {
       await ctx.db.insert("agents", {
-        name: "saas-architect",
-        role: "SaaS architect - Next.js, Python, Supabase, AI integration",
-        status: "active",
-        lastHeartbeatAt: now - 3 * 60_000,
-        taskCount: 12,
-        currentTask: "Mission Control dashboard improvements",
-        capabilities: ["nextjs", "python", "supabase", "ai_integration", "architecture"],
-      });
-      inserted.push("saas-architect");
-    } catch (e) {
-      // Agent may already exist
-    }
-
-    try {
-      await ctx.db.insert("agents", {
-        name: "code-reviewer",
-        role: "Code reviewer - quality, security, best practices",
+        name: "Tech Analyst",
+        role: "Engineering & technical analysis",
         status: "idle",
         lastHeartbeatAt: now - 15 * 60_000,
         taskCount: 3,
-        capabilities: ["code_review", "security_audit", "quality_assurance", "best_practices"],
+        capabilities: ["technical_analysis", "engineering", "research", "evaluation"],
       });
-      inserted.push("code-reviewer");
+      inserted.push("Tech Analyst");
     } catch (e) {
       // Agent may already exist
     }
 
     try {
       await ctx.db.insert("agents", {
-        name: "research",
-        role: "Research analyst - market research, competitive analysis",
-        status: "active",
+        name: "Finance",
+        role: "Financial modeling & strategy",
+        status: "idle",
         lastHeartbeatAt: now - 20 * 60_000,
-        taskCount: 4,
-        currentTask: "EV market trends analysis",
-        capabilities: ["market_research", "competitive_analysis", "technology_evaluation", "trend_monitoring"],
+        taskCount: 2,
+        capabilities: ["financial_modeling", "strategy", "analysis", "forecasting"],
       });
-      inserted.push("research");
+      inserted.push("Finance");
+    } catch (e) {
+      // Agent may already exist
+    }
+
+    try {
+      await ctx.db.insert("agents", {
+        name: "Builder",
+        role: "SaaS platform & deployments",
+        status: "active",
+        lastHeartbeatAt: now - 3 * 60_000,
+        taskCount: 4,
+        currentTask: "Mission Control dashboard",
+        capabilities: ["saas_development", "deployment", "architecture", "full_stack"],
+      });
+      inserted.push("Builder");
     } catch (e) {
       // Agent may already exist
     }
