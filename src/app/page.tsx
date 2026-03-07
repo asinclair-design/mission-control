@@ -471,68 +471,62 @@ export default function Home() {
       {tab === "dashboard" && (
         <div className="grid grid-cols-12 gap-4">
           {/* Left: Agent Registry */}
-          <section className={`${agentsCollapsed ? 'col-span-12 lg:col-span-auto lg:w-12' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
+          {!agentsCollapsed && (
+          <section className="col-span-12 lg:col-span-3 panel overflow-hidden transition-all duration-300">
             <div className="panelHeader flex items-center justify-between">
-              {!agentsCollapsed && (
-                <div>
-                  <div className="text-sm text-[color:var(--muted)]">
-                    Registry
-                  </div>
-                  <div className="font-semibold">Agents ({agents.length})</div>
+              <div>
+                <div className="text-sm text-[color:var(--muted)]">
+                  Registry
                 </div>
-              )}
-              <div className={`flex gap-2 ${agentsCollapsed ? 'flex-col' : ''}`}>
-                {!agentsCollapsed && (
-                  <>
-                    <button
-                      className="button !py-2 !px-3"
-                      type="button"
-                      onClick={async () => {
-                        const name = prompt("Agent name:");
-                        if (!name) return;
-                        const role = prompt("Agent role:") || "General";
-                        await createAgent({ name, role });
-                        await appendEvent({
-                          type: "task",
-                          title: "Agent spawned",
-                          detail: `Spawned agent: ${name} (${role})`,
-                          priority: "med",
-                        });
-                      }}
-                    >
-                      Spawn
-                    </button>
-                    <button
-                      className="button !py-2 !px-3"
-                      type="button"
-                      onClick={async () => {
-                        const title = prompt("New task title:");
-                        if (!title) return;
-                        const { id } = await createTask({ title, tags: ["manual"] });
-                        await appendEvent({
-                          type: "task",
-                          title: "Task created",
-                          detail: `Created: ${title}`,
-                          priority: "low",
-                          taskId: id,
-                        });
-                      }}
-                    >
-                      + Task
-                    </button>
-                  </>
-                )}
+                <div className="font-semibold">Agents ({agents.length})</div>
+              </div>
+              <div className="flex gap-2">
                 <button
                   className="button !py-2 !px-3"
                   type="button"
-                  onClick={() => setAgentsCollapsed(!agentsCollapsed)}
-                  title={agentsCollapsed ? "Expand Agents" : "Collapse Agents"}
+                  onClick={async () => {
+                    const name = prompt("Agent name:");
+                    if (!name) return;
+                    const role = prompt("Agent role:") || "General";
+                    await createAgent({ name, role });
+                    await appendEvent({
+                      type: "task",
+                      title: "Agent spawned",
+                      detail: `Spawned agent: ${name} (${role})`,
+                      priority: "med",
+                    });
+                  }}
                 >
-                  {agentsCollapsed ? "→" : "←"}
+                  Spawn
+                </button>
+                <button
+                  className="button !py-2 !px-3"
+                  type="button"
+                  onClick={async () => {
+                    const title = prompt("New task title:");
+                    if (!title) return;
+                    const { id } = await createTask({ title, tags: ["manual"] });
+                    await appendEvent({
+                      type: "task",
+                      title: "Task created",
+                      detail: `Created: ${title}`,
+                      priority: "low",
+                      taskId: id,
+                    });
+                  }}
+                >
+                  + Task
+                </button>
+                <button
+                  className="button !py-2 !px-3"
+                  type="button"
+                  onClick={() => setAgentsCollapsed(true)}
+                  title="Hide Agents"
+                >
+                  Hide
                 </button>
               </div>
             </div>
-            {!agentsCollapsed && (
             <div className="panelBody space-y-3 max-h-[65vh] overflow-y-auto">
               {agents.map((a) => (
                 <div
@@ -632,17 +626,38 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            )}
           </section>
+          )}
 
           {/* Center: Kanban */}
-          <section className={`col-span-12 ${agentsCollapsed && liveFeedCollapsed ? 'lg:col-span-10' : agentsCollapsed || liveFeedCollapsed ? 'lg:col-span-8' : 'lg:col-span-6'} panel overflow-hidden transition-all duration-300`}>
+          <section className={`col-span-12 ${agentsCollapsed && liveFeedCollapsed ? 'lg:col-span-12' : agentsCollapsed || liveFeedCollapsed ? 'lg:col-span-9' : 'lg:col-span-6'} panel overflow-hidden transition-all duration-300`}>
             <div className="panelHeader flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-sm text-[color:var(--muted)]">
-                  Mission Queue
+              <div className="flex items-center gap-4 flex-wrap">
+                <div>
+                  <div className="text-sm text-[color:var(--muted)]">
+                    Mission Queue
+                  </div>
+                  <div className="font-semibold">Kanban ({tasks.length})</div>
                 </div>
-                <div className="font-semibold">Kanban ({tasks.length})</div>
+                {/* Toggle switches for collapsed panels */}
+                {agentsCollapsed && (
+                  <button
+                    className="button !py-1.5 !px-3 text-xs"
+                    type="button"
+                    onClick={() => setAgentsCollapsed(false)}
+                  >
+                    Show Agents
+                  </button>
+                )}
+                {liveFeedCollapsed && (
+                  <button
+                    className="button !py-1.5 !px-3 text-xs"
+                    type="button"
+                    onClick={() => setLiveFeedCollapsed(false)}
+                  >
+                    Show Live Feed
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-2 w-full lg:w-[360px]">
                 <input
@@ -776,24 +791,22 @@ export default function Home() {
           </section>
 
           {/* Right: Live Feed */}
-          <section className={`${liveFeedCollapsed ? 'col-span-12 lg:col-span-auto lg:w-12' : 'col-span-12 lg:col-span-3'} panel overflow-hidden transition-all duration-300`}>
-            <div className={`panelHeader flex items-center ${liveFeedCollapsed ? 'justify-center' : 'justify-between'}`}>
-              {!liveFeedCollapsed && (
-                <div>
-                  <div className="text-sm text-[color:var(--muted)]">Realtime</div>
-                  <div className="font-semibold">Live Feed ({feed.length})</div>
-                </div>
-              )}
+          {!liveFeedCollapsed && (
+          <section className="col-span-12 lg:col-span-3 panel overflow-hidden transition-all duration-300">
+            <div className="panelHeader flex items-center justify-between">
+              <div>
+                <div className="text-sm text-[color:var(--muted)]">Realtime</div>
+                <div className="font-semibold">Live Feed ({feed.length})</div>
+              </div>
               <button
                 className="button !py-2 !px-3"
                 type="button"
-                onClick={() => setLiveFeedCollapsed(!liveFeedCollapsed)}
-                title={liveFeedCollapsed ? "Expand Live Feed" : "Collapse Live Feed"}
+                onClick={() => setLiveFeedCollapsed(true)}
+                title="Hide Live Feed"
               >
-                {liveFeedCollapsed ? "←" : "→"}
+                Hide
               </button>
             </div>
-            {!liveFeedCollapsed && (
             <div className="panelBody space-y-3 max-h-[65vh] overflow-y-auto">
               {feed.map((e) => (
                 <div
@@ -824,8 +837,8 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            )}
           </section>
+          )}
 
           {/* Broadcast */}
           <section className="col-span-12 panel overflow-hidden">
