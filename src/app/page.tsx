@@ -492,28 +492,17 @@ export default function Home() {
             className="button"
             type="button"
             onClick={async () => {
-              alert("Button clicked! Starting reset process...");
               if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
-              
-              // Debug: check if mutation exists
-              console.log("[Reset] clearAllData function:", typeof clearAllData);
-              if (typeof clearAllData !== 'function') {
-                alert("Error: clearAllData mutation not loaded. Check Convex connection.");
-                return;
-              }
               
               const btn = document.activeElement as HTMLButtonElement;
               const originalText = btn?.textContent || "Reset & Re-seed";
               if (btn) btn.textContent = "Clearing...";
               
               try {
-                console.log("[Reset] Calling clearAllData...");
                 const result = await clearAllData({});
-                console.log("[Reset] Success:", result);
                 alert(`Cleared ${result.deleted} items. Reloading...`);
                 window.location.reload();
               } catch (err) {
-                console.error("[Reset] Failed:", err);
                 const msg = err instanceof Error ? err.message : String(err);
                 alert("Failed: " + msg);
                 if (btn) btn.textContent = originalText;
