@@ -360,6 +360,9 @@ export default function Home() {
   const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
   const createProject = useMutation(api.projects.createProject);
 
+  // Reset data mutation
+  const clearAllData = useMutation(api.seed.clearAll);
+
   useEffect(() => {
     void seedIfEmpty({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -484,6 +487,18 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            className="button !text-[color:var(--danger)]"
+            type="button"
+            onClick={async () => {
+              if (confirm("WARNING: This will delete ALL data and re-seed with correct agents. Continue?")) {
+                await clearAllData({});
+                window.location.reload();
+              }
+            }}
+          >
+            Reset Data
+          </button>
           <Link href="/docs" className="button">
             Specs
             <span className="kbd">/docs</span>
