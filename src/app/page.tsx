@@ -371,27 +371,20 @@ export default function Home() {
 
   // Attach click handler for reset button (workaround for React event issues)
   useEffect(() => {
-    console.log("[Reset] useEffect running, looking for button...");
     const btn = document.getElementById("reset-reseed-btn");
-    console.log("[Reset] Button found:", !!btn);
     if (!btn) return;
     
     const handler = async () => {
-      console.log("[Reset] Handler clicked!");
-      // Skip confirm for testing - add back after verification
-      // if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
-      
+      if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
+
       const originalText = btn.textContent || "Reset & Re-seed";
       btn.textContent = "Clearing...";
-      
+
       try {
-        console.log("[Reset] Calling clearAllData...");
         const result = await clearAllData({});
-        console.log("[Reset] Result:", result);
         alert(`Cleared ${result.deleted} items. Reloading...`);
         window.location.reload();
       } catch (err) {
-        console.error("[Reset] Error:", err);
         const msg = err instanceof Error ? err.message : String(err);
         alert("Failed: " + msg);
         btn.textContent = originalText;
@@ -399,7 +392,6 @@ export default function Home() {
     };
     
     btn.addEventListener("click", handler);
-    console.log("[Reset] Handler attached");
     return () => btn.removeEventListener("click", handler);
   }, [clearAllData]);
 
