@@ -378,7 +378,8 @@ export default function Home() {
     
     const handler = async () => {
       console.log("[Reset] Handler clicked!");
-      if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
+      // Skip confirm for testing - add back after verification
+      // if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
       
       const originalText = btn.textContent || "Reset & Re-seed";
       btn.textContent = "Clearing...";
