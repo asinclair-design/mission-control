@@ -324,7 +324,7 @@ export default function Home() {
   const [chatMsg, setChatMsg] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [calendarView, setCalendarView] = useState<"week" | "month">("week");
-  
+
   // Collapsible panel states for better screen space on small screens
   const [agentsCollapsed, setAgentsCollapsed] = useState(false);
   const [liveFeedCollapsed, setLiveFeedCollapsed] = useState(false);
@@ -337,7 +337,7 @@ export default function Home() {
   const analytics = useQuery(api.analytics.summary);
   const chatMessages = useQuery(api.chat.list, { limit: 50 }) ?? [];
   const leads = useQuery(api.leads.listRecent, { limit: 100 }) ?? [];
-  
+
   // New queries for projects, calendar, memories, documents, team
   const projects = useQuery(api.projects.listProjects) ?? [];
   const calendarEvents = useQuery(api.projects.listCalendarEvents, {}) ?? [];
@@ -355,7 +355,7 @@ export default function Home() {
   const removeAgent = useMutation(api.agents.remove);
   const createAgent = useMutation(api.agents.create);
   const sendChat = useMutation(api.chat.send);
-  
+
   // New mutations for projects
   const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
   const createProject = useMutation(api.projects.createProject);
@@ -373,7 +373,7 @@ export default function Home() {
   useEffect(() => {
     const btn = document.getElementById("reset-reseed-btn");
     if (!btn) return;
-    
+
     const handler = async () => {
       if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
 
@@ -390,7 +390,31 @@ export default function Home() {
         btn.textContent = originalText;
       }
     };
-    
+
+    btn.addEventListener("click", handler);
+    return () => btn.removeEventListener("click", handler);
+  }, [clearAllData]);
+
+  // Force reset button - no confirmation
+  useEffect(() => {
+    const btn = document.getElementById("reset-force-btn");
+    if (!btn) return;
+
+    const handler = async () => {
+      const originalText = btn.textContent || "Force Reset";
+      btn.textContent = "Clearing...";
+
+      try {
+        const result = await clearAllData({});
+        alert(`Cleared ${result.deleted} items. Reloading...`);
+        window.location.reload();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        alert("Failed: " + msg);
+        btn.textContent = originalText;
+      }
+    };
+
     btn.addEventListener("click", handler);
     return () => btn.removeEventListener("click", handler);
   }, [clearAllData]);
@@ -423,11 +447,11 @@ export default function Home() {
   );
 
   // Separate active and paused projects
-  const activeProjects = useMemo(() => 
+  const activeProjects = useMemo(() =>
     projects.filter((p) => p.status !== "paused"),
     [projects]
   );
-  
+
   const pausedProjects = useMemo(() =>
     projects.filter((p) => p.status === "paused"),
     [projects]
@@ -520,6 +544,14 @@ export default function Home() {
             type="button"
           >
             Reset & Re-seed
+          </button>
+          <button
+            id="reset-force-btn"
+            className="button !bg-[color:var(--danger)]"
+            type="button"
+            title="Force reset without confirmation"
+          >
+            Force Reset
           </button>
           <button
             className="button !text-[color:var(--danger)]"
@@ -973,7 +1005,7 @@ export default function Home() {
                     value={broadcast}
                     onChange={(e) => setBroadcast(e.target.value)}
                     className="input min-h-[80px]"
-                    placeholder='e.g. "Find podcasts I can appear on" — agents will fan out, create subtasks, and produce deliverables.'
+                    placeholder='e.g. "Find podcasts I can appear on" - agents will fan out, create subtasks, and produce deliverables.'
                   />
                 </div>
                 <div className="lg:col-span-3 flex flex-col gap-2">
@@ -1456,7 +1488,7 @@ export default function Home() {
             { label: "Events", value: analytics.events.total, sub: `${analytics.events.errors} errors · ${analytics.events.approvalsPending} approvals` },
             { label: "Cron Jobs", value: analytics.crons.total, sub: `${analytics.crons.ok} ok · ${analytics.crons.error} error` },
             { label: "High Priority", value: analytics.tasks.highPriority, sub: "score ≥ 18" },
-            { label: "Med Priority", value: analytics.tasks.medPriority, sub: "score 10–17" },
+            { label: "Med Priority", value: analytics.tasks.medPriority, sub: "score 10-17" },
             { label: "Collaborative", value: analytics.tasks.collaborativeTasks, sub: "2+ agents assigned" },
           ].map((m) => (
             <div key={m.label} className="panel p-4">
@@ -1751,13 +1783,13 @@ export default function Home() {
                           {l.email}
                         </td>
                         <td className="py-2 pr-3 text-[color:rgba(245,246,250,0.82)]">
-                          {l.name ?? "—"}
+                          {l.name ?? "-"}
                         </td>
                         <td className="py-2 pr-3">
-                          <span className="badge">{l.intent ?? "—"}</span>
+                          <span className="badge">{l.intent ?? "-"}</span>
                         </td>
                         <td className="py-2 pr-3 text-[color:var(--muted)]">
-                          {l.source ?? "—"}
+                          {l.source ?? "-"}
                         </td>
                         <td className="py-2 pr-3 text-[color:var(--muted)]">
                           {timeAgo(l.createdAt)}
@@ -1771,7 +1803,7 @@ export default function Home() {
 
             <div className="mt-4 rounded-2xl border border-[rgba(255,255,255,0.10)] bg-[rgba(0,0,0,0.14)] p-3 text-xs text-[color:var(--muted)]">
               Tip: If you want true email marketing flows (double opt-in,
-              sequences), we can export/sync these to Brevo/Mailchimp later —
+              sequences), we can export/sync these to Brevo/Mailchimp later -
               Convex remains the system-of-record.
             </div>
           </div>
