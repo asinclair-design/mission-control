@@ -360,8 +360,9 @@ export default function Home() {
   const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
   const createProject = useMutation(api.projects.createProject);
 
-  // Reset data mutation
+  // Reset data mutations
   const clearAllData = useMutation(api.seed.clearAll);
+  const forceReseedAgents = useMutation(api.seed.forceReseedAgents);
 
   useEffect(() => {
     void seedIfEmpty({});
@@ -488,13 +489,13 @@ export default function Home() {
 
         <div className="flex items-center gap-2">
           <button
-            className="button !text-[color:var(--danger)]"
+            className="button"
             type="button"
             onClick={async () => {
-              if (confirm("WARNING: This will delete ALL data and re-seed with correct agents. Continue?")) {
+              if (confirm("Replace agents with Discord agent list (main, manufacturing, quoting, saas-architect, code-reviewer, research)?")) {
                 try {
-                  await clearAllData({});
-                  alert("Data cleared. Reloading...");
+                  await forceReseedAgents({});
+                  alert("Agents updated! Reloading...");
                   window.location.reload();
                 } catch (err) {
                   alert("Error: " + (err instanceof Error ? err.message : String(err)));
@@ -502,7 +503,25 @@ export default function Home() {
               }
             }}
           >
-            Reset Data
+            Fix Agents
+          </button>
+          <button
+            className="button !text-[color:var(--danger)]"
+            type="button"
+            onClick={async () => {
+              if (confirm("WARNING: This will delete ALL data. Continue?")) {
+                try {
+                  await clearAllData({});
+                  await seedIfEmpty({});
+                  alert("Data reset complete! Reloading...");
+                  window.location.reload();
+                } catch (err) {
+                  alert("Error: " + (err instanceof Error ? err.message : String(err)));
+                }
+              }
+            }}
+          >
+            Reset All Data
           </button>
           <Link href="/docs" className="button">
             Specs

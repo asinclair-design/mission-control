@@ -229,3 +229,104 @@ export const clearAll = mutation({
     return { deleted };
   },
 });
+
+// Force reseed - clears agents and re-seeds with correct Discord agents
+export const forceReseedAgents = mutation({
+  args: {
+    now: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = args.now ?? Date.now();
+    
+    // Clear existing agents
+    const existingAgents = await ctx.db.query("agents").collect();
+    for (const agent of existingAgents) {
+      await ctx.db.delete(agent._id);
+    }
+    
+    // Clear related data
+    const events = await ctx.db.query("events").collect();
+    for (const event of events) {
+      await ctx.db.delete(event._id);
+    }
+    const chatMessages = await ctx.db.query("chatMessages").collect();
+    for (const msg of chatMessages) {
+      await ctx.db.delete(msg._id);
+    }
+    
+    // Seed new agents matching Discord configuration
+    const mainId = await ctx.db.insert("agents", {
+      name: "main",
+      role: "Orchestrator - coordinates all agents and routes requests",
+      status: "active",
+      lastHeartbeatAt: now - 2 * 60_000,
+      taskCount: 15,
+      currentTask: "coordinating agent tasks",
+      capabilities: ["orchestration", "routing", "tracking", "escalation"],
+    });
+
+    const manufacturingId = await ctx.db.insert("agents", {
+      name: "manufacturing",
+      role: "Manufacturing expert - IATF 16949, PT builds, automotive processes",
+      status: "active",
+      lastHeartbeatAt: now - 5 * 60_000,
+      taskCount: 8,
+      currentTask: "quality compliance review",
+      capabilities: ["iatf_16949", "pt_builds", "quality_management", "process_optimization"],
+    });
+
+    const quotingId = await ctx.db.insert("agents", {
+      name: "quoting",
+      role: "Quoting specialist - cost modeling, RFQ responses, pricing",
+      status: "active",
+      lastHeartbeatAt: now - 8 * 60_000,
+      taskCount: 6,
+      currentTask: "PT quote for Tesla RFQ",
+      capabilities: ["cost_modeling", "rfq_response", "pricing_strategy", "parametric_quotes"],
+    });
+
+    const saasArchitectId = await ctx.db.insert("agents", {
+      name: "saas-architect",
+      role: "SaaS architect - Next.js, Python, Supabase, AI integration",
+      status: "active",
+      lastHeartbeatAt: now - 3 * 60_000,
+      taskCount: 12,
+      currentTask: "Mission Control dashboard improvements",
+      capabilities: ["nextjs", "python", "supabase", "ai_integration", "architecture"],
+    });
+
+    const codeReviewerId = await ctx.db.insert("agents", {
+      name: "code-reviewer",
+      role: "Code reviewer - quality, security, best practices",
+      status: "idle",
+      lastHeartbeatAt: now - 15 * 60_000,
+      taskCount: 3,
+      capabilities: ["code_review", "security_audit", "quality_assurance", "best_practices"],
+    });
+
+    const researchId = await ctx.db.insert("agents", {
+      name: "research",
+      role: "Research analyst - market research, competitive analysis",
+      status: "active",
+      lastHeartbeatAt: now - 20 * 60_000,
+      taskCount: 4,
+      currentTask: "EV market trends analysis",
+      capabilities: ["market_research", "competitive_analysis", "technology_evaluation", "trend_monitoring"],
+    });
+
+    // Seed events
+    await ctx.db.insert("events", {
+      type: "message",
+      agentId: mainId,
+      title: "Agents re-seeded",
+      detail: "Discord agents loaded: main, manufacturing, quoting, saas-architect, code-reviewer, research",
+      priority: "med",
+      createdAt: now,
+    });
+
+    return { 
+      reseeded: true, 
+      agents: ["main", "manufacturing", "quoting", "saas-architect", "code-reviewer", "research"]
+    };
+  },
+});
