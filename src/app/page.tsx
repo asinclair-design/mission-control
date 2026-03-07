@@ -492,10 +492,10 @@ export default function Home() {
             className="button"
             type="button"
             onClick={async () => {
-              if (confirm("Replace agents with Discord agent list (main, manufacturing, quoting, saas-architect, code-reviewer, research)?")) {
+              if (confirm("Clear ALL data and re-seed with Discord agents? This will reset everything.")) {
                 try {
-                  await forceReseedAgents({});
-                  alert("Agents updated! Reloading...");
+                  await clearAllData({});
+                  alert("Data cleared! Reloading to re-seed...");
                   window.location.reload();
                 } catch (err) {
                   alert("Error: " + (err instanceof Error ? err.message : String(err)));
@@ -503,7 +503,7 @@ export default function Home() {
               }
             }}
           >
-            Fix Agents
+            Reset & Re-seed
           </button>
           <button
             className="button !text-[color:var(--danger)]"
