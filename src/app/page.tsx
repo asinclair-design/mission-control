@@ -369,6 +369,32 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Attach click handler for reset button (workaround for React event issues)
+  useEffect(() => {
+    const btn = document.getElementById("reset-reseed-btn");
+    if (!btn) return;
+    
+    const handler = async () => {
+      if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
+      
+      const originalText = btn.textContent || "Reset & Re-seed";
+      btn.textContent = "Clearing...";
+      
+      try {
+        const result = await clearAllData({});
+        alert(`Cleared ${result.deleted} items. Reloading...`);
+        window.location.reload();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        alert("Failed: " + msg);
+        btn.textContent = originalText;
+      }
+    };
+    
+    btn.addEventListener("click", handler);
+    return () => btn.removeEventListener("click", handler);
+  }, [clearAllData]);
+
   const selectedTask = useMemo(
     () => tasks.find((t) => t._id === selectedTaskId),
     [tasks, selectedTaskId]
@@ -489,25 +515,9 @@ export default function Home() {
 
         <div className="flex items-center gap-2">
           <button
+            id="reset-reseed-btn"
             className="button"
             type="button"
-            onClick={async () => {
-              if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
-              
-              const btn = document.activeElement as HTMLButtonElement;
-              const originalText = btn?.textContent || "Reset & Re-seed";
-              if (btn) btn.textContent = "Clearing...";
-              
-              try {
-                const result = await clearAllData({});
-                alert(`Cleared ${result.deleted} items. Reloading...`);
-                window.location.reload();
-              } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                alert("Failed: " + msg);
-                if (btn) btn.textContent = originalText;
-              }
-            }}
           >
             Reset & Re-seed
           </button>
