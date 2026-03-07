@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
-const AGENTS_DIR = path.join(process.cwd(), "..", "agents");
+// Agents folder is copied into the project for deployment
+const AGENTS_DIR = path.join(process.cwd(), "agents");
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
