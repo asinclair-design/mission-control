@@ -237,86 +237,103 @@ export const forceReseedAgents = mutation({
   },
   handler: async (ctx, args) => {
     const now = args.now ?? Date.now();
-    
-    // Clear existing agents
-    const existingAgents = await ctx.db.query("agents").collect();
-    for (const agent of existingAgents) {
-      await ctx.db.delete(agent._id);
-    }
-    
-    // Clear related data
-    const events = await ctx.db.query("events").collect();
-    for (const event of events) {
-      await ctx.db.delete(event._id);
-    }
-    const chatMessages = await ctx.db.query("chatMessages").collect();
-    for (const msg of chatMessages) {
-      await ctx.db.delete(msg._id);
-    }
+    const inserted = [];
     
     // Seed new agents matching Discord configuration
-    const mainId = await ctx.db.insert("agents", {
-      name: "main",
-      role: "Orchestrator - coordinates all agents and routes requests",
-      status: "active",
-      lastHeartbeatAt: now - 2 * 60_000,
-      taskCount: 15,
-      currentTask: "coordinating agent tasks",
-      capabilities: ["orchestration", "routing", "tracking", "escalation"],
-    });
+    // Note: This will fail if agents with these names already exist
+    try {
+      await ctx.db.insert("agents", {
+        name: "main",
+        role: "Orchestrator - coordinates all agents and routes requests",
+        status: "active",
+        lastHeartbeatAt: now - 2 * 60_000,
+        taskCount: 15,
+        currentTask: "coordinating agent tasks",
+        capabilities: ["orchestration", "routing", "tracking", "escalation"],
+      });
+      inserted.push("main");
+    } catch (e) {
+      // Agent may already exist
+    }
 
-    const manufacturingId = await ctx.db.insert("agents", {
-      name: "manufacturing",
-      role: "Manufacturing expert - IATF 16949, PT builds, automotive processes",
-      status: "active",
-      lastHeartbeatAt: now - 5 * 60_000,
-      taskCount: 8,
-      currentTask: "quality compliance review",
-      capabilities: ["iatf_16949", "pt_builds", "quality_management", "process_optimization"],
-    });
+    try {
+      await ctx.db.insert("agents", {
+        name: "manufacturing",
+        role: "Manufacturing expert - IATF 16949, PT builds, automotive processes",
+        status: "active",
+        lastHeartbeatAt: now - 5 * 60_000,
+        taskCount: 8,
+        currentTask: "quality compliance review",
+        capabilities: ["iatf_16949", "pt_builds", "quality_management", "process_optimization"],
+      });
+      inserted.push("manufacturing");
+    } catch (e) {
+      // Agent may already exist
+    }
 
-    const quotingId = await ctx.db.insert("agents", {
-      name: "quoting",
-      role: "Quoting specialist - cost modeling, RFQ responses, pricing",
-      status: "active",
-      lastHeartbeatAt: now - 8 * 60_000,
-      taskCount: 6,
-      currentTask: "PT quote for Tesla RFQ",
-      capabilities: ["cost_modeling", "rfq_response", "pricing_strategy", "parametric_quotes"],
-    });
+    try {
+      await ctx.db.insert("agents", {
+        name: "quoting",
+        role: "Quoting specialist - cost modeling, RFQ responses, pricing",
+        status: "active",
+        lastHeartbeatAt: now - 8 * 60_000,
+        taskCount: 6,
+        currentTask: "PT quote for Tesla RFQ",
+        capabilities: ["cost_modeling", "rfq_response", "pricing_strategy", "parametric_quotes"],
+      });
+      inserted.push("quoting");
+    } catch (e) {
+      // Agent may already exist
+    }
 
-    const saasArchitectId = await ctx.db.insert("agents", {
-      name: "saas-architect",
-      role: "SaaS architect - Next.js, Python, Supabase, AI integration",
-      status: "active",
-      lastHeartbeatAt: now - 3 * 60_000,
-      taskCount: 12,
-      currentTask: "Mission Control dashboard improvements",
-      capabilities: ["nextjs", "python", "supabase", "ai_integration", "architecture"],
-    });
+    try {
+      await ctx.db.insert("agents", {
+        name: "saas-architect",
+        role: "SaaS architect - Next.js, Python, Supabase, AI integration",
+        status: "active",
+        lastHeartbeatAt: now - 3 * 60_000,
+        taskCount: 12,
+        currentTask: "Mission Control dashboard improvements",
+        capabilities: ["nextjs", "python", "supabase", "ai_integration", "architecture"],
+      });
+      inserted.push("saas-architect");
+    } catch (e) {
+      // Agent may already exist
+    }
 
-    const codeReviewerId = await ctx.db.insert("agents", {
-      name: "code-reviewer",
-      role: "Code reviewer - quality, security, best practices",
-      status: "idle",
-      lastHeartbeatAt: now - 15 * 60_000,
-      taskCount: 3,
-      capabilities: ["code_review", "security_audit", "quality_assurance", "best_practices"],
-    });
+    try {
+      await ctx.db.insert("agents", {
+        name: "code-reviewer",
+        role: "Code reviewer - quality, security, best practices",
+        status: "idle",
+        lastHeartbeatAt: now - 15 * 60_000,
+        taskCount: 3,
+        capabilities: ["code_review", "security_audit", "quality_assurance", "best_practices"],
+      });
+      inserted.push("code-reviewer");
+    } catch (e) {
+      // Agent may already exist
+    }
 
-    const researchId = await ctx.db.insert("agents", {
-      name: "research",
-      role: "Research analyst - market research, competitive analysis",
-      status: "active",
-      lastHeartbeatAt: now - 20 * 60_000,
-      taskCount: 4,
-      currentTask: "EV market trends analysis",
-      capabilities: ["market_research", "competitive_analysis", "technology_evaluation", "trend_monitoring"],
-    });
+    try {
+      await ctx.db.insert("agents", {
+        name: "research",
+        role: "Research analyst - market research, competitive analysis",
+        status: "active",
+        lastHeartbeatAt: now - 20 * 60_000,
+        taskCount: 4,
+        currentTask: "EV market trends analysis",
+        capabilities: ["market_research", "competitive_analysis", "technology_evaluation", "trend_monitoring"],
+      });
+      inserted.push("research");
+    } catch (e) {
+      // Agent may already exist
+    }
 
     return { 
       reseeded: true, 
-      agents: ["main", "manufacturing", "quoting", "saas-architect", "code-reviewer", "research"]
+      inserted,
+      message: "Agents added. Use 'Reset All Data' first if you need to clear existing agents."
     };
   },
 });
