@@ -494,9 +494,9 @@ export default function Home() {
             onClick={async () => {
               if (confirm("Clear ALL data and re-seed with Discord agents? This will reset everything.")) {
                 try {
-                  await clearAllData({});
-                  alert("Data cleared! Reloading to re-seed...");
-                  window.location.reload();
+                  const result = await clearAllData({});
+                  alert(`Data cleared: ${result.deleted} items deleted. Reloading...`);
+                  setTimeout(() => window.location.reload(), 500);
                 } catch (err) {
                   alert("Error: " + (err instanceof Error ? err.message : String(err)));
                 }
