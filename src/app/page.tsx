@@ -25,6 +25,10 @@ const columns: TaskStatus[] = [
 
 type Tab = "dashboard" | "projects" | "calendar" | "memories" | "documents" | "team" | "analytics" | "crons" | "errors" | "chat" | "leads";
 
+type AgentFile = "AGENT.md" | "SOUL.md" | "MEMORY.md" | "TOOLS.md" | "IDENTITY.md";
+
+const AGENT_FILES: AgentFile[] = ["AGENT.md", "SOUL.md", "MEMORY.md", "TOOLS.md", "IDENTITY.md"];
+
 function scoreColor(score: number) {
   if (score >= 18) return "text-[color:var(--amber)]";
   if (score >= 10) return "text-[color:rgba(51,230,255,0.95)]";
@@ -394,10 +398,57 @@ export default function Home() {
     [projects]
   );
   
-  const pausedProjects = useMemo(() => 
+  const pausedProjects = useMemo(() =>
     projects.filter((p) => p.status === "paused"),
     [projects]
   );
+
+  // Agent files editor state
+  const [selectedAgentForFiles, setSelectedAgentForFiles] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<AgentFile>("AGENT.md");
+  const [fileContent, setFileContent] = useState<string>("");
+  const [fileLoading, setFileLoading] = useState(false);
+  const [fileSaving, setFileSaving] = useState(false);
+
+  // Load agent file content
+  const loadAgentFile = async (agentName: string, fileName: AgentFile) => {
+    setFileLoading(true);
+    try {
+      const res = await fetch(`/api/agent-files?agent=${encodeURIComponent(agentName)}&file=${encodeURIComponent(fileName)}`);
+      const data = await res.json();
+      setFileContent(data.content || "");
+    } catch (error) {
+      setFileContent("");
+    } finally {
+      setFileLoading(false);
+    }
+  };
+
+  // Save agent file content
+  const saveAgentFile = async () => {
+    if (!selectedAgentForFiles) return;
+    setFileSaving(true);
+    try {
+      await fetch("/api/agent-files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentName: selectedAgentForFiles,
+          fileName: selectedFile,
+          content: fileContent,
+        }),
+      });
+    } finally {
+      setFileSaving(false);
+    }
+  };
+
+  // Open agent files drawer
+  const openAgentFiles = (agentName: string) => {
+    setSelectedAgentForFiles(agentName);
+    setSelectedFile("AGENT.md");
+    loadAgentFile(agentName, "AGENT.md");
+  };
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: "dashboard", label: "Dashboard" },
@@ -621,6 +672,13 @@ export default function Home() {
                       }}
                     >
                       Delete
+                    </button>
+                    <button
+                      className="button !py-2 !px-3"
+                      type="button"
+                      onClick={() => openAgentFiles(a.name)}
+                    >
+                      Files
                     </button>
                   </div>
                 </div>
@@ -1709,6 +1767,86 @@ export default function Home() {
             }
           }}
         />
+      )}
+
+      {/* Agent Files Drawer */}
+      {selectedAgentForFiles && (
+        <div
+          className="fixed inset-0 z-50 flex justify-end"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedAgentForFiles(null);
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full max-w-2xl h-full overflow-y-auto panel !rounded-none !rounded-l-2xl border-l border-[rgba(255,255,255,0.12)]">
+            <div className="panelHeader flex items-center justify-between sticky top-0 z-10 bg-[rgba(10,14,20,0.95)] backdrop-blur-md">
+              <div>
+                <div className="text-xs text-[color:var(--muted)]">
+                  Agent Files
+                </div>
+                <div className="font-semibold text-lg">{selectedAgentForFiles}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  className="button !py-2 !px-3"
+                  type="button"
+                  onClick={saveAgentFile}
+                  disabled={fileSaving}
+                >
+                  {fileSaving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  className="button !py-2 !px-3"
+                  type="button"
+                  onClick={() => setSelectedAgentForFiles(null)}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* File selector */}
+              <div className="flex flex-wrap gap-2">
+                {AGENT_FILES.map((file) => (
+                  <button
+                    key={file}
+                    className={`button !py-1.5 !px-3 text-xs ${
+                      selectedFile === file
+                        ? "!text-[color:var(--amber)] !border-[rgba(255,176,32,0.35)]"
+                        : ""
+                    }`}
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(file);
+                      loadAgentFile(selectedAgentForFiles, file);
+                    }}
+                  >
+                    {file}
+                  </button>
+                ))}
+              </div>
+
+              {/* File editor */}
+              <div>
+                <div className="text-xs text-[color:var(--muted)] mb-2 uppercase tracking-wide">
+                  Editing: {selectedFile}
+                </div>
+                {fileLoading ? (
+                  <div className="text-[color:var(--muted)]">Loading...</div>
+                ) : (
+                  <textarea
+                    value={fileContent}
+                    onChange={(e) => setFileContent(e.target.value)}
+                    className="input min-h-[60vh] font-mono text-sm"
+                    placeholder={`# ${selectedFile}\n\nEnter content here...`}
+                    spellCheck={false}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
