@@ -492,8 +492,13 @@ export default function Home() {
             type="button"
             onClick={async () => {
               if (confirm("WARNING: This will delete ALL data and re-seed with correct agents. Continue?")) {
-                await clearAllData({});
-                window.location.reload();
+                try {
+                  await clearAllData({});
+                  alert("Data cleared. Reloading...");
+                  window.location.reload();
+                } catch (err) {
+                  alert("Error: " + (err instanceof Error ? err.message : String(err)));
+                }
               }
             }}
           >
