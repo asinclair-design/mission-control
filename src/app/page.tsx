@@ -494,6 +494,13 @@ export default function Home() {
             onClick={async () => {
               if (!confirm("Clear ALL data and re-seed? This will reset everything.")) return;
               
+              // Debug: check if mutation exists
+              console.log("[Reset] clearAllData function:", typeof clearAllData);
+              if (typeof clearAllData !== 'function') {
+                alert("Error: clearAllData mutation not loaded. Check Convex connection.");
+                return;
+              }
+              
               const btn = document.activeElement as HTMLButtonElement;
               const originalText = btn?.textContent || "Reset & Re-seed";
               if (btn) btn.textContent = "Clearing...";
