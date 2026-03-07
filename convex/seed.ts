@@ -217,15 +217,45 @@ export const seedIfEmpty = mutation({
 export const clearAll = mutation({
   args: {},
   handler: async (ctx) => {
-    const tables = ["agents", "tasks", "deliverables", "events", "cronJobs", "chatMessages", "projects", "calendarEvents", "memories", "documents", "team"] as const;
     let deleted = 0;
-    for (const table of tables) {
-      const docs = await ctx.db.query(table).collect();
-      for (const doc of docs) {
-        await ctx.db.delete(doc._id);
-        deleted++;
-      }
-    }
+    
+    // Delete from each table
+    const agents = await ctx.db.query("agents").collect();
+    for (const doc of agents) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const tasks = await ctx.db.query("tasks").collect();
+    for (const doc of tasks) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const deliverables = await ctx.db.query("deliverables").collect();
+    for (const doc of deliverables) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const events = await ctx.db.query("events").collect();
+    for (const doc of events) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const cronJobs = await ctx.db.query("cronJobs").collect();
+    for (const doc of cronJobs) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const chatMessages = await ctx.db.query("chatMessages").collect();
+    for (const doc of chatMessages) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const leads = await ctx.db.query("leads").collect();
+    for (const doc of leads) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const projects = await ctx.db.query("projects").collect();
+    for (const doc of projects) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const calendarEvents = await ctx.db.query("calendarEvents").collect();
+    for (const doc of calendarEvents) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const memories = await ctx.db.query("memories").collect();
+    for (const doc of memories) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const documents = await ctx.db.query("documents").collect();
+    for (const doc of documents) { await ctx.db.delete(doc._id); deleted++; }
+    
+    const team = await ctx.db.query("team").collect();
+    for (const doc of team) { await ctx.db.delete(doc._id); deleted++; }
+    
     return { deleted };
   },
 });
